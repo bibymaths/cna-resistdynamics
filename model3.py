@@ -830,8 +830,10 @@ def run_one_patient(patient_id: str, args) -> Dict:
 
 def fit_and_collect_points(patient_id: str, args) -> List[Dict]:
     """
-    Fit models for one patient and return per-timepoint obs/pred rows
-    for GOF scatter plots + out-of-95% flags.
+    Fit models for one patient and return:
+      - per-timepoint obs/pred rows for GOF scatter plots + out-of-95% flags
+      - parameter rows (theta) for ODE and PDE in the same long-table format
+        (written as var="theta:<name>", pred=<value>)
     """
     data = load_patient_data(
         args.data, patient_id, time_unit=args.time_unit,
@@ -841,10 +843,29 @@ def fit_and_collect_points(patient_id: str, args) -> List[Dict]:
         require_panel_sequenced=args.require_panel_sequenced,
         require_detected_cna=args.require_detected_cna,
     )
-    rows = []
+    rows: List[Dict] = []
 
-    # ---- ODE ----
+    # ---------------- ODE ----------------
     theta_ode, out_ode = fit_ode(data)
+
+    # ---- STORE ODE THETA ROWS ----
+    ode_names = (
+        ["log_aS", "logit_aR_over_aS", "log_dS", "logit_dR_over_dS",
+         "log_K", "log_N0", "logit_r0", "log_gamma", "log_sigma_ca"]
+        + [f"logit_u_ctx[{c}]" for c in data.context_names]
+    )
+    for name, val in zip(ode_names, theta_ode):
+        rows.append({
+            "patient": patient_id,
+            "time": np.nan,
+            "model": "ODE",
+            "var": f"theta:{name}",
+            "obs": np.nan,
+            "pred": float(val),
+            "flag_out95": False,
+        })
+    # -----------------------------
+
     r_hat_ode, logca_hat_ode = simulate_ode(data, theta_ode)
     sigma_ca_ode = float(np.exp(theta_ode[8]))  # theta[8] is log_sigma_ca in ODE
 
@@ -873,9 +894,29 @@ def fit_and_collect_points(patient_id: str, args) -> List[Dict]:
             "flag_out95": bool(out_ca[i]),
         })
 
-    # ---- PDE ----
+    # ---------------- PDE ----------------
     if not args.no_pde:
         theta_pde, out_pde = fit_pde(data, M=args.pde_grid)
+
+        # ---- STORE PDE THETA ROWS ----
+        pde_names = (
+            ["log_g0", "logit_c", "log_d0", "logit_b",
+             "log_K", "log_D", "log_N0", "logit_r0", "logit_xstar",
+             "log_gamma", "log_sigma_ca"]
+            + [f"logit_u_ctx[{c}]" for c in data.context_names]
+        )
+        for name, val in zip(pde_names, theta_pde):
+            rows.append({
+                "patient": patient_id,
+                "time": np.nan,
+                "model": "PDE",
+                "var": f"theta:{name}",
+                "obs": np.nan,
+                "pred": float(val),
+                "flag_out95": False,
+            })
+        # -----------------------------
+
         r_hat_pde, logca_hat_pde = simulate_pde(data, theta_pde, M=args.pde_grid)
         sigma_ca_pde = float(np.exp(theta_pde[10]))  # theta[10] is log_sigma_ca in PDE
 
@@ -953,9 +994,40 @@ def main():
         pretty_print("ODE fit (S/R competition)", data.context_names, theta_ode, out_ode["metrics"])
         print("ODE optimizer:", out_ode["success"], out_ode["message"])
 
+        # print ODE theta
+        print("\nODE theta (raw):")
+        print(theta_ode)
+
+        print("\nODE theta (named):")
+        C1 = len(data.context_names)
+        names = (
+                ["log_g0", "logit_c", "log_d0", "logit_b", "log_K", "log_D", "log_N0", "logit_r0", "logit_xstar",
+                 "log_gamma", "log_sigma_ca"]
+                + [f"logit_u_ctx[{c}]" for c in data.context_names]
+        )
+        for k, v in zip(names, theta_ode):
+            print(f"{k:>20s} = {v: .6f}")
+
         if not args.no_pde:
             theta_pde, out_pde = fit_pde(data, M=args.pde_grid)
-            pretty_print(f"PDE fit (trait-structured, M={args.pde_grid})", data.context_names, theta_pde, out_pde["metrics"])
+
+            # ---- PRINT PDE THETA (raw + named) ----
+            print("\nPDE theta (raw):")
+            print(theta_pde)
+
+            C2 = len(data.context_names)
+            names = (
+                    ["log_g0", "logit_c", "log_d0", "logit_b", "log_K", "log_D", "log_N0", "logit_r0", "logit_xstar",
+                     "log_gamma", "log_sigma_ca"]
+                    + [f"logit_u_ctx[{c}]" for c in data.context_names]
+            )
+            print("\nPDE theta (named):")
+            for k, v in zip(names, theta_pde):
+                print(f"{k:>20s} = {v: .6f}")
+            # --------------------------------------
+
+            pretty_print(f"PDE fit (trait-structured, M={args.pde_grid})", data.context_names, theta_pde,
+                         out_pde["metrics"])
             print("PDE optimizer:", out_pde["success"], out_pde["message"])
 
             print("\nModel comparison (lower is better):")
