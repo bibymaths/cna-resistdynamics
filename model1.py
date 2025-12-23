@@ -43,6 +43,8 @@ context_id = df["context"].map(context_map).to_numpy()
 # Build previous index within patient and delta-t
 prev_idx = np.full(len(df), -1, dtype=int)
 dt = np.full(len(df), np.nan, dtype=float)
+# after computing dt for transitions
+dt = np.where(dt < 1e-6, 1e-6, dt)   # only for non-first rows
 prev_context = np.full(len(df), -1, dtype=int)
 
 for p in range(P):
@@ -129,7 +131,13 @@ with pm.Model() as model:
 
     # Sample
     idata = pm.sample(
-        draws=2000, tune=2000, chains=4, target_accept=0.9, random_seed=42
+        draws=2000,
+        tune=2000,
+        chains=4,
+        cores=8,
+        target_accept=0.95,
+        random_seed=42,
+        verbose=True
     )
 
 print(idata)

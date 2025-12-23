@@ -11,6 +11,7 @@ df = pd.read_csv(path, sep="\t")
 df = df[df["Accept_estimate"].isin(["yes","maybe"])].copy()
 
 df["Time"] = pd.to_numeric(df["Time"], errors="coerce")
+df["Time"] = df["Time"] / 30.0  # days -> months
 df = df.dropna(subset=["Time", "ratio", "ratio_min95", "ratio_max95", "CA125"]).copy()
 df = df.sort_values(["Patient", "Time"]).reset_index(drop=True)
 
@@ -26,9 +27,10 @@ prev = np.zeros(N, dtype=int)
 dt = np.zeros(N, dtype=float)
 cprev = np.zeros(N, dtype=int)
 
-for p in range(1, P+1):
+for p in range(1, P + 1):
     idx = np.where(pid == p)[0]
     idx = idx[np.argsort(df.loc[idx, "Time"].to_numpy())]
+
     for j in range(len(idx)):
         cur = idx[j]
         if j == 0:
@@ -36,10 +38,14 @@ for p in range(1, P+1):
             dt[cur] = 0.0
             cprev[cur] = 0
         else:
-            pr = idx[j-1]
+            pr = idx[j - 1]
             prev[cur] = pr + 1  # 1-based index into z
             dt[cur] = float(df.loc[cur, "Time"] - df.loc[pr, "Time"])
             cprev[cur] = int(cid[pr])  # previous sample context
+
+# After the loops: clamp dt ONLY for transition rows
+mask = prev > 0
+dt[mask] = np.maximum(dt[mask], 1e-6)
 
 ratio = np.clip(df["ratio"].to_numpy(), 1e-6, 1-1e-6)
 rL = np.clip(df["ratio_min95"].to_numpy(), 1e-6, 1-1e-6)
