@@ -72,15 +72,15 @@ required.
 
 For each patient \( p \), resistance is modeled as a latent fraction
 
-\[
+$$
 r_p(t) \in (0, 1)
-\]
+$$
 
 internally represented on the logit scale
 
-\[
+$$
 z_p(t) = \log\frac{r_p(t)}{1 - r_p(t)}.
-\]
+$$
 
 ---
 
@@ -88,13 +88,13 @@ z_p(t) = \log\frac{r_p(t)}{1 - r_p(t)}.
 
 Resistance evolves as a stochastic process with context-dependent drift:
 
-\[
+$$
 z_{p,i} = z_{p,i-1}
 + \mu_{p,c} \Delta t_i
 + \epsilon_{p,i},
 \quad
 \epsilon_{p,i} \sim \mathcal{N}(0, \sigma_p^2 \Delta t_i)
-\]
+$$
 
 where:
 
@@ -119,11 +119,11 @@ Measurements are modeled on the logit scale using a Gaussian approximation.
 CA125 is modeled as a log-normal observation coupled to the latent resistance
 state:
 
-\[
+$$
 \log(\text{CA125}_{p,i})
 \sim
 \mathcal{N}(\alpha_p + \beta z_{p,i}, \sigma_c^2)
-\]
+$$
 
 This allows quantitative testing of whether inferred resistance dynamics
 predict disease burden.
@@ -135,9 +135,9 @@ predict disease burden.
 When segment-level CNA data are available, individual subclonal segments can be
 modeled as reporters of the resistant fraction:
 
-\[
+$$
 \Delta \text{CN}_{s}(t) \propto r_p(t)
-\]
+$$
 
 This removes reliance on liquidCNA summary ratios and enables reconstruction of
 resistance dynamics directly from CNA evidence.

@@ -1,0 +1,44 @@
+name: cna-resist-dynamics
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  # ---- Core Python ----
+  - python=3.11
+  - pip
+
+  # ---- Numerical stack ----
+  - numpy
+  - scipy
+  - pandas
+  - xarray
+
+  # ---- Bayesian modeling ----
+  - pymc>=5.10
+  - pytensor
+  - arviz
+
+  # ---- Stan interface ----
+  - cmdstan>=2.33
+  - cmdstanpy>=1.2
+
+  # ---- Data I/O ----
+  - pyreadr        # for reading .RData CNA tables
+  - h5py
+
+  # ---- Plotting / analysis ----
+  - matplotlib
+  - seaborn
+
+  # ---- Utilities ----
+  - tqdm
+  - jupyterlab
+
+  # ---- Optional (safe to remove if not needed) ----
+  - graphviz       # for model graphs / diagnostics
+
+  # ---- pip-only extras (kept minimal) ----
+  - pip:
+      - cftime
