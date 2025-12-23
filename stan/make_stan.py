@@ -6,7 +6,7 @@ def logit(x):
     x = np.clip(x, 1e-6, 1 - 1e-6)
     return np.log(x/(1-x))
 
-path = "data/liquidCNA_results/Subclonal_ratio_estimates.extended.txt"
+path = "../data/liquidCNA_results/Subclonal_ratio_estimates.extended.txt"
 df = pd.read_csv(path, sep="\t")
 df = df[df["Accept_estimate"].isin(["yes","maybe"])].copy()
 

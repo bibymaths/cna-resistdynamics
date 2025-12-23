@@ -1,7 +1,7 @@
 from cmdstanpy import CmdStanModel
 
 model = CmdStanModel(
-    stan_file="resistance_state_space.stan",
+    stan_file="stan/resistance_state_space.stan",
     cpp_options={"STAN_THREADS": True},
 )
 fit = model.sample(
