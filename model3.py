@@ -100,9 +100,66 @@ class PatientData:
     maybe_mask: np.ndarray
 
 
-def load_patient_data(path: str, patient: str, time_unit: str = "months") -> PatientData:
+def load_patient_data(
+    path: str,
+    patient: str,
+    time_unit: str = "months",
+    sample_list_path: str = None,
+    use_ca125_updated: bool = False,
+    drop_failed: bool = False,
+    require_panel_sequenced: bool = False,
+    require_detected_cna: bool = False,
+) -> PatientData:
     df = pd.read_csv(path, sep="\t")
     df = df[df["Accept_estimate"].isin(["yes", "maybe"])].copy()
+
+    # --- optional merge with sample list for updated CA125 + QC flags ---
+    # We need a join key. In your extended table the sample id is typically in column "time"
+    # (strings like UP0018HHT2 / ...). We'll merge on SampleName <-> time.
+    if sample_list_path is not None:
+        sl = load_sample_list(sample_list_path)
+
+        # detect the sample-id column in the main df
+        # common: "time" (string sample id), while "Time" is numeric
+        sample_col = None
+        for cand in ["time", "SampleName", "sample", "sample_id"]:
+            if cand in df.columns:
+                sample_col = cand
+                break
+        if sample_col is None:
+            raise ValueError("Could not find sample id column in extended table (expected 'time' or similar).")
+
+        df[sample_col] = df[sample_col].astype(str)
+        sl = sl.rename(columns={"SampleName": sample_col})
+
+        # merge (keep only samples that appear in both)
+        df = df.merge(
+            sl[[sample_col, "Patient", "CA125_updated", "Failed", "PanelSequenced", "DetectedCNA"]],
+            on=[sample_col, "Patient"],
+            how="left",
+        )
+
+        # apply QC filters if requested
+        def is_true(x):
+            if pd.isna(x): return False
+            if isinstance(x, (bool, np.bool_)): return bool(x)
+            s = str(x).strip().lower()
+            return s in ["true", "t", "1", "yes", "y"]
+
+        if drop_failed and "Failed" in df.columns:
+            df = df[~df["Failed"].apply(is_true)].copy()
+
+        if require_panel_sequenced and "PanelSequenced" in df.columns:
+            df = df[df["PanelSequenced"].apply(is_true)].copy()
+
+        if require_detected_cna and "DetectedCNA" in df.columns:
+            df = df[df["DetectedCNA"].apply(is_true)].copy()
+
+        if use_ca125_updated and "CA125_updated" in df.columns:
+            # replace CA125 where updated exists
+            df["CA125"] = np.where(df["CA125_updated"].notna(), df["CA125_updated"], df["CA125"])
+
+    # --- continue with your original parsing ---
     df["Time"] = pd.to_numeric(df["Time"], errors="coerce")
     df["CA125"] = pd.to_numeric(df["CA125"], errors="coerce")
     df = df.dropna(subset=["Time", "ratio", "ratio_min95", "ratio_max95", "CA125"]).copy()
@@ -110,9 +167,9 @@ def load_patient_data(path: str, patient: str, time_unit: str = "months") -> Pat
     df["Patient"] = df["Patient"].astype(str)
     df = df[df["Patient"] == str(patient)].copy()
     if df.empty:
-        raise ValueError(f"No rows found for patient={patient}")
+        raise ValueError(f"No rows found for patient={patient} after filtering/merging")
 
-    # rescale time to months (strongly recommended)
+    # rescale time
     if time_unit == "months":
         df["Time"] = df["Time"] / 30.0
     elif time_unit == "days":
@@ -127,9 +184,9 @@ def load_patient_data(path: str, patient: str, time_unit: str = "months") -> Pat
     ctx_map = {c: i for i, c in enumerate(context_names)}
     ctx = df["context"].astype(str).map(ctx_map).to_numpy()
 
-    ratio = np.clip(df["ratio"].to_numpy().astype(float), 1e-9, 1 - 1e-9)
-    r_lo = np.clip(df["ratio_min95"].to_numpy().astype(float), 1e-9, 1 - 1e-9)
-    r_hi = np.clip(df["ratio_max95"].to_numpy().astype(float), 1e-9, 1 - 1e-9)
+    ratio = np.clip(df["ratio"].to_numpy().astype(float), 1e-4, 1 - 1e-4)
+    r_lo = np.clip(df["ratio_min95"].to_numpy().astype(float), 1e-4, 1 - 1e-4)
+    r_hi = np.clip(df["ratio_max95"].to_numpy().astype(float), 1e-4, 1 - 1e-4)
     se = ci95_to_se_logit(ratio, r_lo, r_hi)
 
     maybe = (df["Accept_estimate"].to_numpy() == "maybe")
@@ -154,6 +211,43 @@ def load_patient_data(path: str, patient: str, time_unit: str = "months") -> Pat
         log_ca125=log_ca,
         maybe_mask=maybe,
     )
+
+
+def load_sample_list(path: str) -> pd.DataFrame:
+    """
+    OV_patientDNA_sampleList.txt: tab-separated, columns include:
+    SampleName, Patient, Context, Time, CA125_updated, Failed, PanelSequenced, DetectedCNA, ...
+    """
+    df = pd.read_csv(path, sep="\t")
+    # normalize column names defensively
+    df.columns = [c.strip() for c in df.columns]
+    # force string types for keys
+    if "SampleName" in df.columns:
+        df["SampleName"] = df["SampleName"].astype(str)
+    if "Patient" in df.columns:
+        df["Patient"] = df["Patient"].astype(str)
+    return df
+
+
+def load_drivers(path: str) -> pd.DataFrame:
+    df = pd.read_csv(path, sep=None, engine="python", encoding="utf-8-sig")
+    df.columns = [c.strip() for c in df.columns]
+
+    if "Patient" not in df.columns:
+        raise ValueError(f"No Patient column. Columns={list(df.columns)}")
+
+    # your file uses GeneName
+    gene_col = "GeneName" if "GeneName" in df.columns else ("GeneID" if "GeneID" in df.columns else df.columns[0])
+
+    df = df[["Patient", gene_col]].rename(columns={gene_col: "Driver"}).copy()
+    df["Patient"] = df["Patient"].astype(str).str.strip()
+    df["Driver"] = df["Driver"].astype(str).str.strip()
+
+    g = (df.groupby("Patient")["Driver"]
+           .apply(lambda s: ",".join(sorted(set([x for x in s if x and x.lower() != "nan"]))))
+           .reset_index())
+    g["n_drivers"] = g["Driver"].apply(lambda x: 0 if not x else len(x.split(",")))
+    return g
 
 def get_patients_with_flag(path: str, flags: List[str]) -> List[str]:
     df = pd.read_csv(path, sep="\t")
@@ -207,7 +301,12 @@ def simulate_ode(data: PatientData, theta: np.ndarray) -> Tuple[np.ndarray, np.n
     log_aS, log_aR, log_dS, log_dR, log_K, log_N0, logit_r0, log_gamma, log_sigma_ca = theta[:9]
     u_ctx = invlogit(theta[9:9 + C])  # (0,1)
 
-    aS, aR, dS, dR, K = np.exp([log_aS, log_aR, log_dS, log_dR, log_K])
+    aS = np.exp(log_aS)
+    aR = aS * invlogit(np.array([log_aR]))[0]  # forces 0 < aR < aS
+    dS = np.exp(log_dS)
+    dR = dS * invlogit(np.array([log_dR]))[0]  # forces 0 < dR < dS
+    K = np.exp(log_K)
+
     N0 = float(np.exp(log_N0))
     r0 = float(invlogit(np.array([logit_r0]))[0])
     gamma = float(np.exp(log_gamma))
@@ -271,7 +370,8 @@ def nll_ode(theta: np.ndarray, data: PatientData) -> float:
     sigma_ca = float(np.exp(theta[8]))
     nll_ca = 0.5 * np.sum(((data.log_ca125 - logca_hat) / sigma_ca) ** 2 + 2 * np.log(sigma_ca) + np.log(2 * np.pi))
 
-    return float(nll_ratio + nll_ca)
+    w_ca = 0.2  # downweight CA125 vs ratio; tune 0.1–1.0
+    return float(nll_ratio + w_ca * nll_ca)
 
 
 # -------------------------- PDE model (trait-structured) --------------------------
@@ -430,7 +530,8 @@ def nll_pde(theta: np.ndarray, data: PatientData, M: int) -> float:
     sigma_ca = float(np.exp(theta[10]))
     nll_ca = 0.5 * np.sum(((data.log_ca125 - logca_hat) / sigma_ca) ** 2 + 2 * np.log(sigma_ca) + np.log(2 * np.pi))
 
-    return float(nll_ratio + nll_ca)
+    w_ca = 0.2
+    return float(nll_ratio + w_ca * nll_ca)
 
 
 # -------------------------- Fit + GOF --------------------------
@@ -463,7 +564,7 @@ def multistart_minimize(
     fun,
     x0,
     bounds,
-    n_starts=8,
+    n_starts=1,
     rel_noise=0.3,
     seed=0,
     method="L-BFGS-B",
@@ -528,9 +629,9 @@ def fit_ode(data: PatientData) -> Tuple[np.ndarray, Dict]:
     # aS > aR, dS >> dR, big K
     x0 = np.zeros(9 + C)
     x0[0] = np.log(0.5)    # aS
-    x0[1] = np.log(0.3)    # aR
+    x0[1] = logit(np.array([0.6]))[0]  # means aR ~ 0.6*aS
     x0[2] = np.log(0.8)    # dS
-    x0[3] = np.log(0.05)   # dR
+    x0[3] = logit(np.array([0.05]))[0]  # means dR ~ 0.05*dS
     x0[4] = np.log(1e6)    # K
     x0[5] = np.log(1e4)    # N0
     x0[6] = logit(np.array([np.clip(data.ratio[0], 1e-4, 1-1e-4)]))[0]  # r0
@@ -556,7 +657,7 @@ def fit_ode(data: PatientData) -> Tuple[np.ndarray, Dict]:
         fun=lambda th: nll_ode(th, data),
         x0=x0,
         bounds=bnds,
-        n_starts=10,
+        n_starts=1,
         rel_noise=0.25,
         seed=hash(data.patient) % (2 ** 32),
         method="L-BFGS-B",
@@ -613,7 +714,7 @@ def fit_pde(data: PatientData, M: int) -> Tuple[np.ndarray, Dict]:
         fun=lambda th: nll_pde(th, data, M),
         x0=x0,
         bounds=bnds,
-        n_starts=8,
+        n_starts=1,
         rel_noise=0.25,
         seed=(hash(data.patient) + 12345) % (2 ** 32),
         method="L-BFGS-B",
@@ -732,7 +833,14 @@ def fit_and_collect_points(patient_id: str, args) -> List[Dict]:
     Fit models for one patient and return per-timepoint obs/pred rows
     for GOF scatter plots + out-of-95% flags.
     """
-    data = load_patient_data(args.data, patient_id, time_unit=args.time_unit)
+    data = load_patient_data(
+        args.data, patient_id, time_unit=args.time_unit,
+        sample_list_path=args.sample_list,
+        use_ca125_updated=args.use_ca125_updated,
+        drop_failed=args.drop_failed,
+        require_panel_sequenced=args.require_panel_sequenced,
+        require_detected_cna=args.require_detected_cna,
+    )
     rows = []
 
     # ---- ODE ----
@@ -806,6 +914,17 @@ def main():
     ap.add_argument("--time_unit", default="months", choices=["months", "days"])
     ap.add_argument("--pde_grid", type=int, default=81)
     ap.add_argument("--no_pde", action="store_true")
+    ap.add_argument("--sample_list", default=None,
+                    help="Path to OV_patientDNA_sampleList.txt for CA125_updated + QC flags merge")
+    ap.add_argument("--drivers", default=None,
+                    help="Path to Drivers_subclonalCNA.txt to annotate patients with subclonal CNA drivers")
+
+    ap.add_argument("--use_ca125_updated", action="store_true",
+                    help="Replace CA125 with CA125_updated when sample_list is provided")
+    ap.add_argument("--drop_failed", action="store_true", help="Drop samples flagged Failed==TRUE in sample_list")
+    ap.add_argument("--require_panel_sequenced", action="store_true",
+                    help="Keep only PanelSequenced==TRUE in sample_list")
+    ap.add_argument("--require_detected_cna", action="store_true", help="Keep only DetectedCNA==TRUE in sample_list")
 
     group = ap.add_mutually_exclusive_group(required=True)
     group.add_argument("--patient", help="Run a single patient, e.g. UP0018")
@@ -817,8 +936,16 @@ def main():
     args = ap.parse_args()
 
     # ---- single patient mode ----
-    if args.patient:
-        data = load_patient_data(args.data, args.patient, time_unit=args.time_unit)
+    if args.patient is not None:
+        data = load_patient_data(
+            args.data, args.patient, time_unit=args.time_unit,
+            sample_list_path=args.sample_list,
+            use_ca125_updated=args.use_ca125_updated,
+            drop_failed=args.drop_failed,
+            require_panel_sequenced=args.require_panel_sequenced,
+            require_detected_cna=args.require_detected_cna,
+        )
+
         print(f"Patient={data.patient}  N={len(data.t)}  time_unit={args.time_unit}")
         print("Context levels:", data.context_names)
 
@@ -841,6 +968,13 @@ def main():
     # ---- all patients mode ----
     flags = [x.strip() for x in args.flag.split(",") if x.strip()]
     patients = get_patients_with_flag(args.data, flags=flags)
+    drivers_df = None
+    if args.drivers:
+        drivers_df = load_drivers(args.drivers)
+        drivers_map = dict(zip(drivers_df["Patient"], drivers_df["Driver"]))
+        ndrivers_map = dict(zip(drivers_df["Patient"], drivers_df["n_drivers"]))
+    else:
+        drivers_map, ndrivers_map = {}, {}
 
     with tqdm_joblib(tqdm(total=len(patients), desc="Patients")):
         all_rows_nested = Parallel(n_jobs=args.n_jobs, backend="loky", prefer="processes")(
@@ -851,9 +985,14 @@ def main():
     all_rows = [row for rows in all_rows_nested for row in rows]
     df_points = pd.DataFrame(all_rows)
 
+    if args.drivers:
+        ddf = load_drivers(args.drivers)
+        df_points = df_points.merge(ddf, left_on="patient", right_on="Patient", how="left")
+        df_points = df_points.drop(columns=["Patient"])
     # save long table (useful for debugging / re-plotting)
     out_points = args.out_points or f"gof_points_flags_{'_'.join(flags)}.csv"
     df_points.to_csv(out_points, index=False)
+
     log(f"GOF points: rows={len(df_points)} patients={df_points['patient'].nunique()} "
         f"out95={int(df_points['flag_out95'].sum())}",
         patient="ALL", model="GOF")
