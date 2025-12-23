@@ -46,6 +46,21 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 from tqdm_joblib import tqdm_joblib
 import traceback
+import time
+import os
+from datetime import datetime
+_NLL_FAIL = {"ODE": 0, "PDE": 0}
+
+
+
+def log(msg: str, patient: str = "-", model: str = "-"):
+    ts = datetime.now().strftime("%H:%M:%S")
+    pid = os.getpid()
+    print(f"[{ts} pid={pid} {patient} {model}] {msg}", flush=True)
+
+class Timer:
+    def __init__(self): self.t0 = time.time()
+    def s(self): return time.time() - self.t0
 
 
 # -------------------------- Utilities --------------------------
@@ -123,6 +138,12 @@ def load_patient_data(path: str, patient: str, time_unit: str = "months") -> Pat
     ca = df["CA125"].to_numpy().astype(float)
     log_ca = safe_log(ca)
 
+    log(f"Loaded N={len(df)} points, contexts={len(context_names)}, "
+        f"t=[{df['Time'].min():.3g},{df['Time'].max():.3g}] "
+        f"ratio=[{ratio.min():.3g},{ratio.max():.3g}] "
+        f"CA125=[{ca.min():.3g},{ca.max():.3g}] "
+        f"maybe={maybe.sum()}", patient=str(patient), model="DATA")
+
     return PatientData(
         patient=str(patient),
         t=df["Time"].to_numpy().astype(float),
@@ -178,6 +199,8 @@ def simulate_ode(data: PatientData, theta: np.ndarray) -> Tuple[np.ndarray, np.n
     """
     theta = [log_aS, log_aR, log_dS, log_dR, log_K, log_N0, logit_r0, log_gamma, log_sigma_ca, u_ctx...]
     """
+    tm = Timer()
+
     C = len(data.context_names)
     assert theta.size == 9 + C
 
@@ -207,6 +230,12 @@ def simulate_ode(data: PatientData, theta: np.ndarray) -> Tuple[np.ndarray, np.n
         max_step=max(1e-3, (t1 - t0) / 200.0),
     )
 
+    ode_method = "LSODA"
+    # log(f"solve_ivp method={ode_method} success={sol.success} nfev={getattr(sol, 'nfev', None)} "
+    #     f"njev={getattr(sol, 'njev', None)} nlu={getattr(sol, 'nlu', None)} "
+    #     f"status={getattr(sol, 'status', None)} message={getattr(sol, 'message', '')} dt={tm.s():.2f}s",
+    #     patient=data.patient, model="ODE")
+
     if not sol.success or np.any(~np.isfinite(sol.y)):
         raise RuntimeError("ODE solver failed")
 
@@ -216,13 +245,20 @@ def simulate_ode(data: PatientData, theta: np.ndarray) -> Tuple[np.ndarray, np.n
     r = R / N
     log_ca = safe_log(gamma * N)
 
+    # log(f"Pred r=[{r.min():.3g},{r.max():.3g}] N=[{N.min():.3g},{N.max():.3g}]",
+    #     patient=data.patient, model="ODE")
+
     return r, log_ca
 
 
 def nll_ode(theta: np.ndarray, data: PatientData) -> float:
     try:
         r_hat, logca_hat = simulate_ode(data, theta)
-    except Exception:
+    except Exception as e:
+        _NLL_FAIL["ODE"] += 1
+        if _NLL_FAIL["ODE"] <= 3 or _NLL_FAIL["ODE"] % 50 == 0:
+            log(f"NLL solver fail #{_NLL_FAIL['ODE']}: {type(e).__name__}: {e}",
+                patient=data.patient, model="ODE")
         return 1e50
 
     # ratio likelihood on logit scale using CI-derived SE
@@ -310,6 +346,8 @@ def simulate_pde(data: PatientData, theta: np.ndarray, M: int = 81) -> Tuple[np.
     theta = [log_g0, logit_c, log_d0, logit_b, log_K, log_D, log_N0, logit_r0, logit_xstar,
              log_gamma, log_sigma_ca, u_ctx...]
     """
+    tm = Timer()
+
     C = len(data.context_names)
     assert theta.size == 11 + C
 
@@ -349,6 +387,12 @@ def simulate_pde(data: PatientData, theta: np.ndarray, M: int = 81) -> Tuple[np.
         max_step=max(1e-3, (t1 - t0) / 200.0),
     )
 
+    pde_method = "BDF"
+    # log(f"solve_ivp method={pde_method} success={sol.success} nfev={getattr(sol, 'nfev', None)} "
+    #     f"njev={getattr(sol, 'njev', None)} nlu={getattr(sol, 'nlu', None)} "
+    #     f"status={getattr(sol, 'status', None)} message={getattr(sol, 'message', '')} dt={tm.s():.2f}s",
+    #     patient=data.patient, model="PDE")
+
     if not sol.success or np.any(~np.isfinite(sol.y)):
         raise RuntimeError("PDE (method-of-lines) solver failed")
 
@@ -364,6 +408,9 @@ def simulate_pde(data: PatientData, theta: np.ndarray, M: int = 81) -> Tuple[np.
         frac = Rmass / max(N, 1e-12)
         r_hat[i] = np.clip(frac, 1e-9, 1 - 1e-9)
         log_ca_hat[i] = float(safe_log(np.array([gamma * N]))[0])
+
+    # log(f"Pred r=[{r_hat.min():.3g},{r_hat.max():.3g}] logCA=[{log_ca_hat.min():.3g},{log_ca_hat.max():.3g}]",
+    #     patient=data.patient, model="PDE")
 
     return r_hat, log_ca_hat
 
@@ -412,31 +459,67 @@ def gof_metrics(r_obs, r_hat, logca_obs, logca_hat, nll, k_params):
         "MAE_logCA125": mae_ca,
     }
 
-def multistart_minimize(fun, x0, bounds, n_starts=8, rel_noise=0.3, seed=0, method="L-BFGS-B", maxiter=800):
+def multistart_minimize(
+    fun,
+    x0,
+    bounds,
+    n_starts=8,
+    rel_noise=0.3,
+    seed=0,
+    method="L-BFGS-B",
+    maxiter=800,
+    tag="",
+    patient="-",
+):
     rng = np.random.default_rng(seed)
-    best = None
+    tm_all = Timer()
+
+    best_res = None
+    best_val = np.inf
 
     # always include the provided x0 as a start
-    starts = [x0.copy()]
+    starts = [np.asarray(x0, dtype=float).copy()]
 
-    # additional random starts around x0 in parameter space
     lo = np.array([b[0] for b in bounds], dtype=float)
     hi = np.array([b[1] for b in bounds], dtype=float)
 
-    for _ in range(n_starts - 1):
-        z = x0.copy()
-        # multiplicative noise on transformed params (still in theta-space)
+    # additional random starts around x0
+    for _ in range(max(0, n_starts - 1)):
+        z = starts[0].copy()
         noise = rng.normal(0.0, rel_noise, size=z.size)
-        z = z + noise
-        z = np.clip(z, lo, hi)
+        z = np.clip(z + noise, lo, hi)
         starts.append(z)
 
-    for s in starts:
-        res = minimize(fun, s, method=method, bounds=bounds, options={"maxiter": maxiter})
-        if best is None or res.fun < best.fun:
-            best = res
+    for i, s in enumerate(starts, 1):
+        tm = Timer()
+        try:
+            res = minimize(fun, s, method=method, bounds=bounds, options={"maxiter": maxiter})
+            val = float(res.fun) if np.isfinite(res.fun) else np.inf
+        except Exception as e:
+            log(f"start {i}/{len(starts)} exception: {type(e).__name__}: {e} dt={tm.s():.2f}s",
+                patient=patient, model=tag)
+            continue
 
-    return best
+        if val < best_val:
+            best_val = val
+            best_res = res
+
+        log(
+            f"start {i}/{len(starts)} done: fun={val:.3g} best={best_val:.3g} "
+            f"success={getattr(res, 'success', False)} nit={getattr(res, 'nit', None)} dt={tm.s():.2f}s",
+            patient=patient,
+            model=tag,
+        )
+
+    if best_res is None:
+        # hard fail-safe: return a dummy result-like object
+        log("multistart failed: no successful starts (all exceptions)", patient=patient, model=tag)
+        return minimize(fun, starts[0], method=method, bounds=bounds, options={"maxiter": 1})
+
+    log(f"multistart done: best_fun={best_val:.3g} total_dt={tm_all.s():.2f}s",
+        patient=patient, model=tag)
+
+    return best_res
 
 def fit_ode(data: PatientData) -> Tuple[np.ndarray, Dict]:
     C = len(data.context_names)
@@ -478,9 +561,14 @@ def fit_ode(data: PatientData) -> Tuple[np.ndarray, Dict]:
         seed=hash(data.patient) % (2 ** 32),
         method="L-BFGS-B",
         maxiter=1200,
+        patient=data.patient,
+        tag="ODE"
     )
 
     theta = res.x
+    u_ctx = invlogit(theta[9:9 + C])
+    log(f"u_ctx: min={u_ctx.min():.3g} max={u_ctx.max():.3g}", patient=data.patient, model="ODE")
+
     nll = float(res.fun)
 
     r_hat, logca_hat = simulate_ode(data, theta)
@@ -530,9 +618,14 @@ def fit_pde(data: PatientData, M: int) -> Tuple[np.ndarray, Dict]:
         seed=(hash(data.patient) + 12345) % (2 ** 32),
         method="L-BFGS-B",
         maxiter=900,
+        patient=data.patient,
+        tag="PDE"
     )
 
     theta = res.x
+    u_ctx = invlogit(theta[11:11 + C])
+    log(f"u_ctx: min={u_ctx.min():.3g} max={u_ctx.max():.3g}", patient=data.patient, model="PDE")
+
     nll = float(res.fun)
 
     r_hat, logca_hat = simulate_pde(data, theta, M=M)
@@ -761,6 +854,12 @@ def main():
     # save long table (useful for debugging / re-plotting)
     out_points = args.out_points or f"gof_points_flags_{'_'.join(flags)}.csv"
     df_points.to_csv(out_points, index=False)
+    log(f"GOF points: rows={len(df_points)} patients={df_points['patient'].nunique()} "
+        f"out95={int(df_points['flag_out95'].sum())}",
+        patient="ALL", model="GOF")
+    g = (df_points.groupby(["patient", "model", "var"])["flag_out95"]
+         .mean().reset_index().sort_values("flag_out95", ascending=False))
+    log("Worst out95 rates:\n" + g.head(12).to_string(index=False), patient="ALL", model="GOF")
 
     # plot
     plot_gof_scatter_all(df_points, out_prefix=f"gof_flags_{'_'.join(flags)}")
