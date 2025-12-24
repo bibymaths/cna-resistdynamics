@@ -1,36 +1,18 @@
 #!/usr/bin/env python3
 """
-Fit both an ODE (2-population sensitive/resistant) and a PDE (trait-structured resistance)
+Fit an ODE (2-population sensitive/resistant)
 model to longitudinal liquidCNA resistant fraction + CA125, and compute goodness-of-fit.
 
 Input data: Subclonal_ratio_estimates.extended.txt (tab-separated)
 Required columns: Patient, Time, context, ratio, ratio_min95, ratio_max95, CA125, Accept_estimate
 
-Models:
+Model:
   ODE:
     dS/dt = S*(aS*(1 - (S+R)/K)) - u(t)*dS*S
     dR/dt = R*(aR*(1 - (S+R)/K)) - u(t)*dR*R
     r(t)=R/(S+R), CA125 ~ gamma*(S+R)
+    u(t): piecewise constant treatment intensity based on context of most recent sample
 
-  PDE (trait-structured):
-    ∂n/∂t = n(x)*(g(x)*(1 - N/K) - u(t)*d(x)) + D*∂²n/∂x²
-    g(x)=g0*(1 - c*x)  (fitness cost increases with resistance trait x)
-    d(x)=d0*(1 - b*x)  (drug kill decreases with resistance)
-    r(t)=∫_{x>=x*} n dx / ∫ n dx
-    CA125 ~ gamma*N
-
-Treatment u(t):
-  If you don't have dosing times, we use context-driven piecewise constant u_c in [0,1],
-  chosen by the context of the most recent sample (previous time point).
-  u_c values are fitted (one per unique context in that patient's data).
-
-Goodness-of-fit:
-  - Neg log-likelihood (Gaussian on logit(ratio) using CI-derived SE, Gaussian on log(CA125))
-  - RMSE/MAE on ratio and log(CA125)
-  - AIC, BIC (using NLL and number of fitted parameters)
-
-Run:
-  python fit_ode_pde.py --data data/liquidCNA_results/Subclonal_ratio_estimates.extended.txt --patient UP0018
 """
 
 import argparse
@@ -38,9 +20,9 @@ import numpy as np
 import pandas as pd
 from dataclasses import dataclass
 from typing import Dict, Tuple, List
-
+from functools import partial
 from matplotlib import pyplot as plt
-from scipy.integrate import solve_ivp, trapezoid
+from scipy.integrate import solve_ivp
 from scipy.optimize import minimize
 from joblib import Parallel, delayed
 from tqdm import tqdm
@@ -49,8 +31,14 @@ import traceback
 import time
 import os
 from datetime import datetime
-_NLL_FAIL = {"ODE": 0, "PDE": 0}
+_NLL_FAIL = {"ODE": 0}
 
+# Prevent hidden oversubscription from BLAS/OpenMP inside each worker
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
+os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
 
 
 def log(msg: str, patient: str = "-", model: str = "-"):
@@ -374,166 +362,6 @@ def nll_ode(theta: np.ndarray, data: PatientData) -> float:
     return float(nll_ratio + w_ca * nll_ca)
 
 
-# -------------------------- PDE model (trait-structured) --------------------------
-
-
-def laplacian_neumann(M: int, dx: float) -> np.ndarray:
-    """Second derivative matrix with Neumann (zero-flux) boundaries."""
-    L = np.zeros((M, M))
-    for i in range(1, M - 1):
-        L[i, i - 1] = 1.0
-        L[i, i] = -2.0
-        L[i, i + 1] = 1.0
-
-    # Neumann at boundaries via mirrored ghost points:
-    # n[-1]=n[1], n[M]=n[M-2]
-    L[0, 0] = -2.0
-    L[0, 1] = 2.0
-    L[M - 1, M - 2] = 2.0
-    L[M - 1, M - 1] = -2.0
-
-    return L / (dx ** 2)
-
-
-def pde_rhs(t, n, x, L, pars, u_fun):
-    # pars: g0, c, d0, b, K, D
-    g0, c, d0, b, K, D = pars
-    n = np.clip(n, 0.0, None)
-    N = float(trapezoid(n, x))
-    g = g0 * (1.0 - c * x)              # fitness decreases with resistance
-    d = d0 * (1.0 - b * x)              # drug kill decreases with resistance
-    g = np.clip(g, 0.0, None)
-    d = np.clip(d, 0.0, None)
-
-    u = u_fun(t)
-    growth = n * (g * (1.0 - N / K) - u * d)
-    diff = D * (L @ n)
-    dn = growth + diff
-    return dn
-
-
-def init_trait_density(M: int, x: np.ndarray, N0: float, r0: float, x_star: float) -> np.ndarray:
-    sens = np.exp(-8.0 * x)
-    res = np.exp(-8.0 * (1.0 - x))
-
-    sens_area = float(trapezoid(sens, x))
-    res_area = float(trapezoid(res, x))
-    sens = sens / max(sens_area, 1e-12)
-    res = res / max(res_area, 1e-12)
-
-    n = (1.0 - r0) * sens + r0 * res
-
-    area = float(trapezoid(n, x))
-    n *= N0 / max(area, 1e-12)
-
-    mask = x >= x_star
-    total = float(trapezoid(n, x))
-    resmass = float(trapezoid(n[mask], x[mask]))
-    frac = resmass / max(total, 1e-12)
-
-    if frac > 1e-12:
-        n[mask] *= (r0 / frac)
-        area = float(trapezoid(n, x))
-        n *= N0 / max(area, 1e-12)
-
-    n = np.clip(n, 0.0, None)
-    return n
-
-
-
-def simulate_pde(data: PatientData, theta: np.ndarray, M: int = 81) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    theta = [log_g0, logit_c, log_d0, logit_b, log_K, log_D, log_N0, logit_r0, logit_xstar,
-             log_gamma, log_sigma_ca, u_ctx...]
-    """
-    tm = Timer()
-
-    C = len(data.context_names)
-    assert theta.size == 11 + C
-
-    log_g0, logit_c, log_d0, logit_b, log_K, log_D, log_N0, logit_r0, logit_xstar, log_gamma, log_sigma_ca = theta[:11]
-    u_ctx = invlogit(theta[11:11 + C])
-
-    g0 = float(np.exp(log_g0))
-    c = float(invlogit(np.array([logit_c]))[0])          # (0,1)
-    d0 = float(np.exp(log_d0))
-    b = float(invlogit(np.array([logit_b]))[0])          # (0,1)
-    K = float(np.exp(log_K))
-    D = float(np.exp(log_D))
-    N0 = float(np.exp(log_N0))
-    r0 = float(invlogit(np.array([logit_r0]))[0])
-    x_star = float(invlogit(np.array([logit_xstar]))[0])
-    gamma = float(np.exp(log_gamma))
-    sigma_ca = float(np.exp(log_sigma_ca))
-
-    x = np.linspace(0.0, 1.0, M)
-    dx = x[1] - x[0]
-    L = laplacian_neumann(M, dx)
-
-    u_fun = make_u_of_t(data.t, data.context, u_ctx)
-
-    n0 = init_trait_density(M, x, N0=N0, r0=r0, x_star=x_star)
-
-    t0, t1 = float(data.t[0]), float(data.t[-1])
-
-    sol = solve_ivp(
-        fun=lambda t, n: pde_rhs(t, n, x, L, (g0, c, d0, b, K, D), u_fun),
-        t_span=(t0, t1),
-        y0=n0,
-        t_eval=data.t,
-        method="BDF",
-        rtol=1e-6,
-        atol=1e-9,
-        max_step=max(1e-3, (t1 - t0) / 200.0),
-    )
-
-    pde_method = "BDF"
-    # log(f"solve_ivp method={pde_method} success={sol.success} nfev={getattr(sol, 'nfev', None)} "
-    #     f"njev={getattr(sol, 'njev', None)} nlu={getattr(sol, 'nlu', None)} "
-    #     f"status={getattr(sol, 'status', None)} message={getattr(sol, 'message', '')} dt={tm.s():.2f}s",
-    #     patient=data.patient, model="PDE")
-
-    if not sol.success or np.any(~np.isfinite(sol.y)):
-        raise RuntimeError("PDE (method-of-lines) solver failed")
-
-    # Compute r(t) and CA125 proxy from n(t,x)
-    r_hat = np.zeros_like(data.t)
-    log_ca_hat = np.zeros_like(data.t)
-
-    for i in range(len(data.t)):
-        n = np.clip(sol.y[:, i], 0.0, None)
-        N = float(trapezoid(n, x))
-        mask = x >= x_star
-        Rmass = float(trapezoid(n[mask], x[mask]))
-        frac = Rmass / max(N, 1e-12)
-        r_hat[i] = np.clip(frac, 1e-9, 1 - 1e-9)
-        log_ca_hat[i] = float(safe_log(np.array([gamma * N]))[0])
-
-    # log(f"Pred r=[{r_hat.min():.3g},{r_hat.max():.3g}] logCA=[{log_ca_hat.min():.3g},{log_ca_hat.max():.3g}]",
-    #     patient=data.patient, model="PDE")
-
-    return r_hat, log_ca_hat
-
-
-def nll_pde(theta: np.ndarray, data: PatientData, M: int) -> float:
-    try:
-        r_hat, logca_hat = simulate_pde(data, theta, M=M)
-    except Exception:
-        return 1e50
-
-    # ratio likelihood on logit scale
-    y_obs = logit(data.ratio)
-    y_hat = logit(r_hat)
-    se = data.se_logit_ratio
-    nll_ratio = 0.5 * np.sum(((y_obs - y_hat) / se) ** 2 + 2 * np.log(se) + np.log(2 * np.pi))
-
-    sigma_ca = float(np.exp(theta[10]))
-    nll_ca = 0.5 * np.sum(((data.log_ca125 - logca_hat) / sigma_ca) ** 2 + 2 * np.log(sigma_ca) + np.log(2 * np.pi))
-
-    w_ca = 0.2
-    return float(nll_ratio + w_ca * nll_ca)
-
-
 # -------------------------- Fit + GOF --------------------------
 
 
@@ -571,58 +399,69 @@ def multistart_minimize(
     maxiter=800,
     tag="",
     patient="-",
+    n_jobs_starts=1,          # NEW
+    starts_backend="threading" # NEW: "threading" recommended here
 ):
     rng = np.random.default_rng(seed)
     tm_all = Timer()
 
-    best_res = None
-    best_val = np.inf
-
-    # always include the provided x0 as a start
-    starts = [np.asarray(x0, dtype=float).copy()]
-
     lo = np.array([b[0] for b in bounds], dtype=float)
     hi = np.array([b[1] for b in bounds], dtype=float)
 
-    # additional random starts around x0
+    # build starts (always include x0)
+    starts = [np.asarray(x0, dtype=float).copy()]
     for _ in range(max(0, n_starts - 1)):
         z = starts[0].copy()
         noise = rng.normal(0.0, rel_noise, size=z.size)
         z = np.clip(z + noise, lo, hi)
         starts.append(z)
 
-    for i, s in enumerate(starts, 1):
+    def one_start(i, s):
         tm = Timer()
         try:
             res = minimize(fun, s, method=method, bounds=bounds, options={"maxiter": maxiter})
             val = float(res.fun) if np.isfinite(res.fun) else np.inf
+            msg = (
+                f"start {i}/{len(starts)} done: fun={val:.3g} "
+                f"success={getattr(res, 'success', False)} nit={getattr(res, 'nit', None)} dt={tm.s():.2f}s"
+            )
+            return (val, res, msg, None)
         except Exception as e:
-            log(f"start {i}/{len(starts)} exception: {type(e).__name__}: {e} dt={tm.s():.2f}s",
-                patient=patient, model=tag)
-            continue
+            msg = f"start {i}/{len(starts)} exception: {type(e).__name__}: {e} dt={tm.s():.2f}s"
+            return (np.inf, None, msg, e)
 
-        if val < best_val:
-            best_val = val
-            best_res = res
+    # Run starts (optionally parallel)
+    if n_jobs_starts is None or n_jobs_starts <= 1 or len(starts) == 1:
+        results = [one_start(i, s) for i, s in enumerate(starts, 1)]
+    else:
+        results = Parallel(
+            n_jobs=n_jobs_starts,
+            backend="loky",
+            prefer="processes",
+            batch_size=1,
+        )(delayed(one_start)(i, s) for i, s in enumerate(starts, 1))
 
-        log(
-            f"start {i}/{len(starts)} done: fun={val:.3g} best={best_val:.3g} "
-            f"success={getattr(res, 'success', False)} nit={getattr(res, 'nit', None)} dt={tm.s():.2f}s",
-            patient=patient,
-            model=tag,
-        )
+    # pick best
+    best_val = np.inf
+    best_res = None
+    for (val, res, msg, err) in results:
+        log(msg + (f" best_so_far={min(best_val, val):.3g}" if np.isfinite(val) else ""),
+            patient=patient, model=tag)
+        if res is not None and val < best_val:
+            best_val, best_res = val, res
 
     if best_res is None:
-        # hard fail-safe: return a dummy result-like object
         log("multistart failed: no successful starts (all exceptions)", patient=patient, model=tag)
         return minimize(fun, starts[0], method=method, bounds=bounds, options={"maxiter": 1})
 
     log(f"multistart done: best_fun={best_val:.3g} total_dt={tm_all.s():.2f}s",
         patient=patient, model=tag)
-
     return best_res
 
-def fit_ode(data: PatientData) -> Tuple[np.ndarray, Dict]:
+def nll_ode_wrapped(theta, data):
+    return nll_ode(theta, data)
+
+def fit_ode(data: PatientData, n_starts=1, rel_noise=0.25, n_jobs_starts=1) -> Tuple[np.ndarray, Dict]:
     C = len(data.context_names)
 
     # Initial guesses (months time scale)
@@ -654,16 +493,18 @@ def fit_ode(data: PatientData) -> Tuple[np.ndarray, Dict]:
     bnds += [(-10, 10)] * C  # u_ctx logits
 
     res = multistart_minimize(
-        fun=lambda th: nll_ode(th, data),
+        fun = partial(nll_ode, data=data),
         x0=x0,
         bounds=bnds,
-        n_starts=1,
-        rel_noise=0.25,
+        n_starts=n_starts,
+        rel_noise=rel_noise,
         seed=hash(data.patient) % (2 ** 32),
         method="L-BFGS-B",
         maxiter=1200,
         patient=data.patient,
-        tag="ODE"
+        tag="ODE",
+        n_jobs_starts=n_jobs_starts,
+        starts_backend="threading",
     )
 
     theta = res.x
@@ -673,63 +514,6 @@ def fit_ode(data: PatientData) -> Tuple[np.ndarray, Dict]:
     nll = float(res.fun)
 
     r_hat, logca_hat = simulate_ode(data, theta)
-    metrics = gof_metrics(data.ratio, r_hat, data.log_ca125, logca_hat, nll=nll, k_params=theta.size)
-
-    out = {"success": bool(res.success), "message": res.message, "metrics": metrics}
-    return theta, out
-
-
-def fit_pde(data: PatientData, M: int) -> Tuple[np.ndarray, Dict]:
-    C = len(data.context_names)
-
-    x0 = np.zeros(11 + C)
-    x0[0] = np.log(0.6)    # g0
-    x0[1] = logit(np.array([0.5]))[0]  # c in (0,1)
-    x0[2] = np.log(1.0)    # d0
-    x0[3] = logit(np.array([0.8]))[0]  # b in (0,1)
-    x0[4] = np.log(1e6)    # K
-    x0[5] = np.log(1e-3)   # D diffusion
-    x0[6] = np.log(1e4)    # N0
-    x0[7] = logit(np.array([np.clip(data.ratio[0], 1e-4, 1-1e-4)]))[0]  # r0
-    x0[8] = logit(np.array([0.8]))[0]  # x* threshold
-    x0[9] = np.log(np.exp(np.mean(data.log_ca125)) / np.exp(x0[6]))     # gamma
-    x0[10] = np.log(0.5)   # sigma_ca
-    x0[11:] = logit(np.full(C, 0.5))   # u_ctx
-
-    bnds = []
-    bnds += [(-10, 5)]     # log_g0
-    bnds += [(-10, 10)]    # logit_c
-    bnds += [(-10, 5)]     # log_d0
-    bnds += [(-10, 10)]    # logit_b
-    bnds += [(0, 20)]      # log_K
-    bnds += [(-20, 0)]     # log_D
-    bnds += [(-5, 30)]     # log_N0
-    bnds += [(-10, 10)]    # logit_r0
-    bnds += [(-10, 10)]    # logit_xstar
-    bnds += [(-20, 20)]    # log_gamma
-    bnds += [(-3, 5)]     # log_sigma_ca
-    bnds += [(-10, 10)] * C
-
-    res = multistart_minimize(
-        fun=lambda th: nll_pde(th, data, M),
-        x0=x0,
-        bounds=bnds,
-        n_starts=1,
-        rel_noise=0.25,
-        seed=(hash(data.patient) + 12345) % (2 ** 32),
-        method="L-BFGS-B",
-        maxiter=900,
-        patient=data.patient,
-        tag="PDE"
-    )
-
-    theta = res.x
-    u_ctx = invlogit(theta[11:11 + C])
-    log(f"u_ctx: min={u_ctx.min():.3g} max={u_ctx.max():.3g}", patient=data.patient, model="PDE")
-
-    nll = float(res.fun)
-
-    r_hat, logca_hat = simulate_pde(data, theta, M=M)
     metrics = gof_metrics(data.ratio, r_hat, data.log_ca125, logca_hat, nll=nll, k_params=theta.size)
 
     out = {"success": bool(res.success), "message": res.message, "metrics": metrics}
@@ -775,7 +559,7 @@ def plot_gof_scatter_all(df_points: pd.DataFrame, out_prefix="gof"):
 
             plt.xlabel("Observed")
             plt.ylabel("Predicted")
-            plt.title(f"{model} GOF scatter: {var} (label points outside 95%)")
+            plt.title(f"{model} GOF scatter: {var}")
 
             # label out-of-95 points
             out = sub.loc[sub["flag_out95"]].copy()
@@ -790,7 +574,7 @@ def plot_gof_scatter_all(df_points: pd.DataFrame, out_prefix="gof"):
                     plt.text(r["obs"], r["pred"], str(r["patient"]), fontsize=8)
 
             plt.tight_layout()
-            plt.savefig(f"{out_prefix}_{model}_{var}.png", dpi=200)
+            plt.savefig(f"{out_prefix}_{model}_{var}.png", dpi=300)
             plt.close()
 
 
@@ -809,15 +593,6 @@ def run_one_patient(patient_id: str, args) -> Dict:
             "ode_message": str(out_ode["message"]),
             **ode_metrics,
         }
-
-        if not args.no_pde:
-            theta_pde, out_pde = fit_pde(data, M=args.pde_grid)
-            pde_metrics = {f"PDE_{k}": v for k, v in out_pde["metrics"].items()}
-            result.update({
-                "pde_success": bool(out_pde["success"]),
-                "pde_message": str(out_pde["message"]),
-                **pde_metrics,
-            })
 
         return result
 
@@ -846,7 +621,12 @@ def fit_and_collect_points(patient_id: str, args) -> List[Dict]:
     rows: List[Dict] = []
 
     # ---------------- ODE ----------------
-    theta_ode, out_ode = fit_ode(data)
+    theta_ode, out_ode = fit_ode(
+        data,
+        n_starts=args.n_starts,
+        rel_noise=args.rel_noise,
+        n_jobs_starts=args.n_jobs_starts
+    )
 
     # ---- STORE ODE THETA ROWS ----
     ode_names = (
@@ -894,56 +674,6 @@ def fit_and_collect_points(patient_id: str, args) -> List[Dict]:
             "flag_out95": bool(out_ca[i]),
         })
 
-    # ---------------- PDE ----------------
-    if not args.no_pde:
-        theta_pde, out_pde = fit_pde(data, M=args.pde_grid)
-
-        # ---- STORE PDE THETA ROWS ----
-        pde_names = (
-            ["log_g0", "logit_c", "log_d0", "logit_b",
-             "log_K", "log_D", "log_N0", "logit_r0", "logit_xstar",
-             "log_gamma", "log_sigma_ca"]
-            + [f"logit_u_ctx[{c}]" for c in data.context_names]
-        )
-        for name, val in zip(pde_names, theta_pde):
-            rows.append({
-                "patient": patient_id,
-                "time": np.nan,
-                "model": "PDE",
-                "var": f"theta:{name}",
-                "obs": np.nan,
-                "pred": float(val),
-                "flag_out95": False,
-            })
-        # -----------------------------
-
-        r_hat_pde, logca_hat_pde = simulate_pde(data, theta_pde, M=args.pde_grid)
-        sigma_ca_pde = float(np.exp(theta_pde[10]))  # theta[10] is log_sigma_ca in PDE
-
-        y_hat2 = logit(r_hat_pde)
-        out_ratio2 = np.abs(y_obs - y_hat2) > (1.96 * data.se_logit_ratio)
-        out_ca2 = np.abs(data.log_ca125 - logca_hat_pde) > (1.96 * sigma_ca_pde)
-
-        for i, t in enumerate(data.t):
-            rows.append({
-                "patient": patient_id,
-                "time": float(t),
-                "model": "PDE",
-                "var": "ratio",
-                "obs": float(data.ratio[i]),
-                "pred": float(r_hat_pde[i]),
-                "flag_out95": bool(out_ratio2[i]),
-            })
-            rows.append({
-                "patient": patient_id,
-                "time": float(t),
-                "model": "PDE",
-                "var": "logCA125",
-                "obs": float(data.log_ca125[i]),
-                "pred": float(logca_hat_pde[i]),
-                "flag_out95": bool(out_ca2[i]),
-            })
-
     return rows
 
 # -------------------------- Main --------------------------
@@ -953,8 +683,6 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True, help="Path to Subclonal_ratio_estimates.extended.txt")
     ap.add_argument("--time_unit", default="months", choices=["months", "days"])
-    ap.add_argument("--pde_grid", type=int, default=81)
-    ap.add_argument("--no_pde", action="store_true")
     ap.add_argument("--sample_list", default=None,
                     help="Path to OV_patientDNA_sampleList.txt for CA125_updated + QC flags merge")
     ap.add_argument("--drivers", default=None,
@@ -972,6 +700,12 @@ def main():
     group.add_argument("--flag", help="Run all patients with Accept_estimate in this comma-separated list, e.g. yes or yes,maybe")
 
     ap.add_argument("--n_jobs", type=int, default=-1, help="Parallel workers for --flag mode")
+    ap.add_argument("--n_starts", type=int, default=8, help="Number of multistart runs per patient")
+    ap.add_argument("--n_jobs_patients", type=int, default=-1, help="Parallel workers across patients")
+    ap.add_argument("--n_jobs_starts", type=int, default=1,
+                    help="Parallel workers for starts within a patient (threads)")
+    ap.add_argument("--rel_noise", type=float, default=0.25, help="Relative noise for random starts")
+
     ap.add_argument("--out_csv", default=None, help="Output CSV path for --flag mode")
     ap.add_argument("--out_points", default=None, help="CSV for per-timepoint obs/pred points")
     args = ap.parse_args()
@@ -1008,35 +742,6 @@ def main():
         for k, v in zip(names, theta_ode):
             print(f"{k:>20s} = {v: .6f}")
 
-        if not args.no_pde:
-            theta_pde, out_pde = fit_pde(data, M=args.pde_grid)
-
-            # ---- PRINT PDE THETA (raw + named) ----
-            print("\nPDE theta (raw):")
-            print(theta_pde)
-
-            C2 = len(data.context_names)
-            names = (
-                    ["log_g0", "logit_c", "log_d0", "logit_b", "log_K", "log_D", "log_N0", "logit_r0", "logit_xstar",
-                     "log_gamma", "log_sigma_ca"]
-                    + [f"logit_u_ctx[{c}]" for c in data.context_names]
-            )
-            print("\nPDE theta (named):")
-            for k, v in zip(names, theta_pde):
-                print(f"{k:>20s} = {v: .6f}")
-            # --------------------------------------
-
-            pretty_print(f"PDE fit (trait-structured, M={args.pde_grid})", data.context_names, theta_pde,
-                         out_pde["metrics"])
-            print("PDE optimizer:", out_pde["success"], out_pde["message"])
-
-            print("\nModel comparison (lower is better):")
-            print(f"  ODE  AIC={out_ode['metrics']['AIC']:.3f}  BIC={out_ode['metrics']['BIC']:.3f}")
-            print(f"  PDE  AIC={out_pde['metrics']['AIC']:.3f}  BIC={out_pde['metrics']['BIC']:.3f}")
-
-        print("\nDone.")
-        return
-
     # ---- all patients mode ----
     flags = [x.strip() for x in args.flag.split(",") if x.strip()]
     patients = get_patients_with_flag(args.data, flags=flags)
@@ -1049,7 +754,7 @@ def main():
         drivers_map, ndrivers_map = {}, {}
 
     with tqdm_joblib(tqdm(total=len(patients), desc="Patients")):
-        all_rows_nested = Parallel(n_jobs=args.n_jobs, backend="loky", prefer="processes")(
+        all_rows_nested = Parallel(n_jobs=args.n_jobs_patients, backend="loky", prefer="processes")(
             delayed(fit_and_collect_points)(pid, args) for pid in patients
         )
 
