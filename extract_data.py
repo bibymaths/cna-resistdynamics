@@ -22,7 +22,7 @@ def export_all_patient_data(root_dir):
                 patient_id = match.group(0) if match else "Unknown_Patient"
 
                 # Create a specific output directory for this patient
-                output_folder = os.path.join("patient_data", patient_id)
+                output_folder = os.path.join("data/patient_data", patient_id)
                 os.makedirs(output_folder, exist_ok=True)
 
                 print(f"Processing: {file} for Patient: {patient_id}")
