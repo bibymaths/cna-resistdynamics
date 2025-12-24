@@ -637,7 +637,7 @@ def fit_and_collect_points(patient_id: str, args) -> List[Dict]:
         save_patient_states_plots(
             data=data,
             theta=theta_ode,
-            out_dir=os.path.join("per_patient_plots",
+            out_dir=os.path.join("results_model3/per_patient_plots",
                                  f"flags_{'_'.join([x.strip() for x in args.flag.split(',') if x.strip()])}"),
             tag="ODE",
             save_csv=True,

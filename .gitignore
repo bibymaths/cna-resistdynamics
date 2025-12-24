@@ -208,7 +208,8 @@ __marimo__/
 
 
 # user
-data/
-results/
+*data*/
+*results*/
+*plots*/
 *.png
 *.csv
