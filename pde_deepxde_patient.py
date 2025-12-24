@@ -118,7 +118,7 @@ def main():
     model = dde.Model(dde_data, net)
     model.compile("adam", lr=args.lr)
     print(f"[DeepXDE] training for patient={data.patient} T={T_total:.4g} epochs={args.epochs}")
-    model.train(epochs=args.epochs)
+    model.train(epochs=args.epochs, verbose=2)
 
     # Evaluate on observed times: integrate via quadrature over x
     xs = np.linspace(0.0, L, args.Nx)
