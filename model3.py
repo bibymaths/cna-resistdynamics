@@ -284,9 +284,9 @@ def simulate_ode(data: PatientData, theta: np.ndarray) -> Tuple[np.ndarray, np.n
     tm = Timer()
 
     C = len(data.context_names)
-    assert theta.size == 9 + C
+    assert theta.size == 10 + C
 
-    log_aS, log_aR, log_dS, log_dR, log_K, log_N0, logit_r0, log_gamma, log_sigma_ca = theta[:9]
+    log_aS, log_aR, log_dS, log_dR, log_K, log_N0, logit_r0, log_gamma, log_ca0, log_sigma_ca = theta[:10]
     u_ctx = invlogit(theta[9:9 + C])  # (0,1)
 
     aS = np.exp(log_aS)
@@ -298,7 +298,7 @@ def simulate_ode(data: PatientData, theta: np.ndarray) -> Tuple[np.ndarray, np.n
     N0 = float(np.exp(log_N0))
     r0 = float(invlogit(np.array([logit_r0]))[0])
     gamma = float(np.exp(log_gamma))
-    sigma_ca = float(np.exp(log_sigma_ca))
+    ca0 = float(np.exp(log_ca0))
 
     S0 = N0 * (1 - r0)
     R0 = N0 * r0
@@ -330,7 +330,7 @@ def simulate_ode(data: PatientData, theta: np.ndarray) -> Tuple[np.ndarray, np.n
     R = np.clip(sol.y[1], 1e-12, None)
     N = S + R
     r = R / N
-    log_ca = safe_log(gamma * N)
+    log_ca = safe_log(ca0 + gamma * N)
 
     # log(f"Pred r=[{r.min():.3g},{r.max():.3g}] N=[{N.min():.3g},{N.max():.3g}]",
     #     patient=data.patient, model="ODE")
@@ -355,10 +355,13 @@ def nll_ode(theta: np.ndarray, data: PatientData) -> float:
     nll_ratio = 0.5 * np.sum(((y_obs - y_hat) / se) ** 2 + 2 * np.log(se) + np.log(2 * np.pi))
 
     # CA125 likelihood on log scale
-    sigma_ca = float(np.exp(theta[8]))
+    sigma_ca = float(np.exp(theta[9]))  # theta[9] is log_sigma_ca in ODE
     nll_ca = 0.5 * np.sum(((data.log_ca125 - logca_hat) / sigma_ca) ** 2 + 2 * np.log(sigma_ca) + np.log(2 * np.pi))
 
-    w_ca = 0.2  # downweight CA125 vs ratio; tune 0.1–1.0
+    w_ca = 0.5  # equal weight
+    # or
+    # w_ca = 2.0  # force CA125 to matter
+
     return float(nll_ratio + w_ca * nll_ca)
 
 
@@ -466,7 +469,7 @@ def fit_ode(data: PatientData, n_starts=1, rel_noise=0.25, n_jobs_starts=1) -> T
 
     # Initial guesses (months time scale)
     # aS > aR, dS >> dR, big K
-    x0 = np.zeros(9 + C)
+    x0 = np.zeros(10 + C)
     x0[0] = np.log(0.5)    # aS
     x0[1] = logit(np.array([0.6]))[0]  # means aR ~ 0.6*aS
     x0[2] = np.log(0.8)    # dS
@@ -474,9 +477,10 @@ def fit_ode(data: PatientData, n_starts=1, rel_noise=0.25, n_jobs_starts=1) -> T
     x0[4] = np.log(1e6)    # K
     x0[5] = np.log(1e4)    # N0
     x0[6] = logit(np.array([np.clip(data.ratio[0], 1e-4, 1-1e-4)]))[0]  # r0
-    x0[7] = np.log(np.exp(np.mean(data.log_ca125)) / np.exp(x0[5]))     # gamma rough
-    x0[8] = np.log(0.5)    # sigma_ca
-    x0[9:] = logit(np.full(C, 0.5))  # u_ctx (0.5)
+    x0[7] = np.log(1e-3)  # gamma (small slope)
+    x0[8] = np.mean(data.log_ca125) - 1.0  # log_ca0 baseline
+    x0[9] = np.log(0.5)  # sigma_ca
+    x0[10:] = logit(np.full(C, 0.5))
 
     # Bounds (on transformed parameters)
     bnds = []
@@ -488,9 +492,10 @@ def fit_ode(data: PatientData, n_starts=1, rel_noise=0.25, n_jobs_starts=1) -> T
     bnds += [(0, 20)]    # log_K
     bnds += [(-5, 30)]   # log_N0
     bnds += [(-10, 10)]  # logit_r0
-    bnds += [(-20, 20)]  # log_gamma
-    bnds += [(-3, 5)]   # log_sigma_ca
-    bnds += [(-10, 10)] * C  # u_ctx logits
+    bnds += [(-20, 5)]  # log_gamma
+    bnds += [(-5, 15)]  # log_ca0  (baseline CA125)
+    bnds += [(-3, 5)]  # log_sigma_ca
+    bnds += [(-10, 10)] * C
 
     res = multistart_minimize(
         fun = partial(nll_ode, data=data),
@@ -627,12 +632,25 @@ def fit_and_collect_points(patient_id: str, args) -> List[Dict]:
         rel_noise=args.rel_noise,
         n_jobs_starts=args.n_jobs_starts
     )
+    # ---- per-patient diagnostics (plots + optional CSVs) ----
+    try:
+        save_patient_states_plots(
+            data=data,
+            theta=theta_ode,
+            out_dir=os.path.join("per_patient_plots",
+                                 f"flags_{'_'.join([x.strip() for x in args.flag.split(',') if x.strip()])}"),
+            tag="ODE",
+            save_csv=True,
+            dpi=300,
+        )
+    except Exception as e:
+        log(f"Diagnostics plot failed: {type(e).__name__}: {e}", patient=data.patient, model="PLOT")
 
     # ---- STORE ODE THETA ROWS ----
     ode_names = (
-        ["log_aS", "logit_aR_over_aS", "log_dS", "logit_dR_over_dS",
-         "log_K", "log_N0", "logit_r0", "log_gamma", "log_sigma_ca"]
-        + [f"logit_u_ctx[{c}]" for c in data.context_names]
+            ["log_aS", "logit_aR_over_aS", "log_dS", "logit_dR_over_dS",
+             "log_K", "log_N0", "logit_r0", "log_gamma", "log_ca0", "log_sigma_ca"]
+            + [f"logit_u_ctx[{c}]" for c in data.context_names]
     )
     for name, val in zip(ode_names, theta_ode):
         rows.append({
@@ -676,6 +694,143 @@ def fit_and_collect_points(patient_id: str, args) -> List[Dict]:
 
     return rows
 
+def simulate_states(data: PatientData, theta: np.ndarray):
+    """
+    Returns state trajectories evaluated at data.t:
+      S(t), R(t), N(t)=S+R, r(t)=R/N, logCA125_hat(t)
+    Uses the same parameterization + LSODA as your simulate_ode().
+    """
+    C = len(data.context_names)
+    assert theta.size == 10 + C
+
+    log_aS, log_aR, log_dS, log_dR, log_K, log_N0, logit_r0, log_gamma, log_ca0, log_sigma_ca = theta[:10]
+    u_ctx = invlogit(theta[9:9 + C])
+
+    aS = np.exp(log_aS)
+    aR = aS * invlogit(np.array([log_aR]))[0]         # 0 < aR < aS
+    dS = np.exp(log_dS)
+    dR = dS * invlogit(np.array([log_dR]))[0]         # 0 < dR < dS
+    K = np.exp(log_K)
+
+    N0 = float(np.exp(log_N0))
+    r0 = float(invlogit(np.array([logit_r0]))[0])
+    gamma = float(np.exp(log_gamma))
+    ca0 = float(np.exp(log_ca0))
+
+    S0 = N0 * (1.0 - r0)
+    R0 = N0 * r0
+
+    u_fun = make_u_of_t(data.t, data.context, u_ctx)
+    t0, t1 = float(data.t[0]), float(data.t[-1])
+
+    sol = solve_ivp(
+        fun=lambda t, y: ode_rhs(t, y, (aS, aR, dS, dR, K), u_fun),
+        t_span=(t0, t1),
+        y0=[S0, R0],
+        t_eval=data.t,
+        method="LSODA",
+        rtol=1e-6,
+        atol=1e-9,
+        max_step=max(1e-3, (t1 - t0) / 200.0),
+    )
+    if (not sol.success) or np.any(~np.isfinite(sol.y)):
+        raise RuntimeError("ODE solver failed in simulate_states()")
+
+    S = np.clip(sol.y[0], 1e-12, None)
+    R = np.clip(sol.y[1], 1e-12, None)
+    N = S + R
+    r = R / N
+    log_ca = safe_log(ca0 + gamma * N)
+
+    return S, R, N, r, log_ca, u_ctx
+
+
+def save_patient_states_plots(
+    data: PatientData,
+    theta: np.ndarray,
+    out_dir: str,
+    *,
+    tag: str = "ODE",
+    save_csv: bool = True,
+    dpi: int = 300,
+):
+    """
+    Creates per-patient files under out_dir:
+      - <patient>_<tag>_states.png        (S, R, N)
+      - <patient>_<tag>_fit.png           (ratio obs/pred + logCA125 obs/pred)
+      - <patient>_<tag>_u_ctx.csv         (context -> u value)
+      - <patient>_<tag>_states.csv        (time, S, R, N, r_hat, logCA_hat, ratio_obs, logCA_obs, context)
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    pid = str(data.patient)
+
+    S, R, N, r_hat, logca_hat, u_ctx = simulate_states(data, theta)
+
+    # ---------- Save CSV ----------
+    if save_csv:
+        df = pd.DataFrame({
+            "patient": pid,
+            "time": data.t.astype(float),
+            "context_id": data.context.astype(int),
+            "context_name": [data.context_names[i] for i in data.context],
+            "S": S.astype(float),
+            "R": R.astype(float),
+            "N": N.astype(float),
+            "r_hat": r_hat.astype(float),
+            "ratio_obs": data.ratio.astype(float),
+            "logCA_hat": logca_hat.astype(float),
+            "logCA_obs": data.log_ca125.astype(float),
+        })
+        df.to_csv(os.path.join(out_dir, f"{pid}_{tag}_states.csv"), index=False)
+
+        dfu = pd.DataFrame({
+            "patient": pid,
+            "context_name": data.context_names,
+            "u_ctx": u_ctx.astype(float),
+            "logit_u_ctx": theta[9:9 + len(data.context_names)].astype(float),
+        })
+        dfu.to_csv(os.path.join(out_dir, f"{pid}_{tag}_u_ctx.csv"), index=False)
+
+    # ---------- Plot 1: states (S, R, N) ----------
+    fig = plt.figure(figsize=(10, 6))
+    plt.plot(data.t, S, label="S(t)")
+    plt.plot(data.t, R, label="R(t)")
+    plt.plot(data.t, N, label="N(t)=S+R")
+    plt.xlabel(f"Time ({'months' if True else 'time'})")  # keep generic
+    plt.ylabel("Population (a.u.)")
+    plt.title(f"{pid} {tag}: simulated states")
+    plt.legend()
+    plt.tight_layout()
+    fig.savefig(os.path.join(out_dir, f"{pid}_{tag}_states.png"), dpi=dpi)
+    plt.close(fig)
+
+    # ---------- Plot 2: fit (ratio + logCA) ----------
+    fig = plt.figure(figsize=(10, 6))
+
+    # ratio
+    plt.plot(data.t, data.ratio, marker="o", linestyle="-", label="ratio obs")
+    plt.plot(data.t, r_hat, marker="o", linestyle="--", label="ratio pred")
+
+    # logCA
+    plt.plot(data.t, data.log_ca125, marker="s", linestyle="-", label="logCA125 obs")
+    plt.plot(data.t, logca_hat, marker="s", linestyle="--", label="logCA125 pred")
+
+    plt.xlabel("Time")
+    plt.ylabel("Value")
+    plt.title(f"{pid} {tag}: observed vs predicted")
+    plt.legend()
+    plt.tight_layout()
+    fig.savefig(os.path.join(out_dir, f"{pid}_{tag}_fit.png"), dpi=dpi)
+    plt.close(fig)
+
+    return {
+        "patient": pid,
+        "out_dir": out_dir,
+        "states_png": os.path.join(out_dir, f"{pid}_{tag}_states.png"),
+        "fit_png": os.path.join(out_dir, f"{pid}_{tag}_fit.png"),
+        "states_csv": os.path.join(out_dir, f"{pid}_{tag}_states.csv") if save_csv else None,
+        "u_csv": os.path.join(out_dir, f"{pid}_{tag}_u_ctx.csv") if save_csv else None,
+    }
 # -------------------------- Main --------------------------
 
 
