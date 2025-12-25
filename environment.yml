@@ -124,9 +124,11 @@ dependencies:
   - ipykernel=7.1.0=pyha191276_0
   - ipython=9.8.0=pyh53cf698_0
   - ipython_pygments_lexers=1.1.1=pyhd8ed1ab_0
+  - ipywidgets=8.1.8=pyhd8ed1ab_0
   - isoduration=20.11.0=pyhd8ed1ab_1
   - jedi=0.19.2=pyhd8ed1ab_1
   - jinja2=3.1.6=pyhcf101f3_1
+  - joblib=1.5.3=pyhd8ed1ab_0
   - json5=0.12.1=pyhd8ed1ab_0
   - jsoncpp=1.9.6=hf42df4d_1
   - jsonpointer=3.0.0=pyhcf101f3_3
@@ -142,6 +144,7 @@ dependencies:
   - jupyterlab=4.5.1=pyhd8ed1ab_0
   - jupyterlab_pygments=0.3.0=pyhd8ed1ab_2
   - jupyterlab_server=2.28.0=pyhcf101f3_0
+  - jupyterlab_widgets=3.0.16=pyhcf101f3_1
   - kahip=3.19=h0ca329d_1
   - kernel-headers_linux-64=3.10.0=he073ed8_18
   - keyutils=1.6.3=hb9d3cd8_0
@@ -264,6 +267,7 @@ dependencies:
   - mkl-devel=2025.3.0=ha770c72_462
   - mkl-include=2025.3.0=hf2ce2f3_462
   - mkl-service=2.6.1=py311h589b1ee_0
+  - more-itertools=10.8.0=pyhcf101f3_1
   - mpi=1.0.1=mpich
   - mpi4py=4.1.1=py311h2a725c7_102
   - mpich=4.3.2=h79b1c89_101
@@ -381,6 +385,12 @@ dependencies:
   - tornado=6.5.4=py311h41d9c34_0
   - tqdm=4.67.1=pyhd8ed1ab_1
   - traitlets=5.14.3=pyhd8ed1ab_1
+  - trame=3.12.0=pyhd8ed1ab_0
+  - trame-client=3.11.2=pyhd8ed1ab_0
+  - trame-common=1.1.0=pyhd8ed1ab_0
+  - trame-server=3.9.0=pyhd8ed1ab_0
+  - trame-vtk=2.10.1=pyh932262d_0
+  - trame-vuetify=3.2.0=pyhd8ed1ab_0
   - typing-extensions=4.15.0=h396c80c_0
   - typing_extensions=4.15.0=pyhcf101f3_0
   - typing_utils=0.1.0=pyhd8ed1ab_1
@@ -398,6 +408,7 @@ dependencies:
   - websocket-client=1.9.0=pyhd8ed1ab_0
   - werkzeug=3.1.4=pyhcf101f3_0
   - wheel=0.45.1=pyhd8ed1ab_1
+  - widgetsnbextension=4.0.15=pyhd8ed1ab_0
   - wslink=2.5.0=pyhd8ed1ab_0
   - xarray=2025.12.0=pyhcf101f3_0
   - xarray-einstats=0.9.1=pyhd8ed1ab_0
@@ -425,6 +436,7 @@ dependencies:
   - xorg-libxtst=1.2.5=hb9d3cd8_3
   - xorg-libxxf86vm=1.1.6=hb9d3cd8_0
   - xorg-xorgproto=2025.1=hb03c661_0
+  - xvfbwrapper=0.2.16=pyhd8ed1ab_0
   - yaml=0.2.5=h280c20c_3
   - yarl=1.22.0=py311h3778330_0
   - zeromq=4.3.5=h387f397_9
