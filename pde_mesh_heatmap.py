@@ -244,7 +244,7 @@ def main():
     ap.add_argument("--use_ca125_updated", action="store_true")
 
     # NEW ARGUMENT for ODE Results
-    ap.add_argument("--ode_results", required=True, help="Path to model3.py output CSV (gof_points...)")
+    ap.add_argument("--ode_results", required=True, help="Path to ode_model.py output CSV (gof_points...)")
 
     # Physics Params (Defaults)
     ap.add_argument("--L", type=float, default=1.0)
