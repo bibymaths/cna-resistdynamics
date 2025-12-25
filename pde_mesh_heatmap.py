@@ -229,9 +229,11 @@ def plot_heatmaps(x, t, S_mat, R_mat, patient_id):
     ax[1].set_xlabel("Space (x)")
     fig.colorbar(im2, ax=ax[1], label="Fraction (R / N)")
 
-    outfile = f"heatmap_{patient_id}.png"
+    results_dir = "results_pde_model"
+    os.makedirs(results_dir, exist_ok=True)
+    outfile = f"{results_dir}/heatmap_{patient_id}.png"
     plt.tight_layout()
-    plt.savefig(outfile, dpi=150)
+    plt.savefig(outfile, dpi=300)
     plt.close(fig)
     print(f"   [Plot] Saved {outfile}")
 
