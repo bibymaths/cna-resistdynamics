@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Callable, Tuple, List
 
 import numpy as np
+from numba import njit
 from scipy.integrate import solve_ivp
 
 from .odeio import PatientData
@@ -41,18 +42,34 @@ def make_u_of_t(t_samples: np.ndarray, ctx_samples: np.ndarray, u_ctx: np.ndarra
 
     return u
 
+@njit(cache=True)
+def _ode_rhs_core(t: float, S: float, R: float,
+                  aS: float, aR: float, dS: float, dR: float, K: float,
+                  u: float) -> np.ndarray:
+    N = S + R
+    g = 1.0 - N / K
+    if g < 0.0:
+        g = 0.0
 
-def ode_rhs(t: float, y: np.ndarray, pars: tuple[float, float, float, float, float], u_fun: Callable[[float], float]):
+    dSdt = S * (aS * g) - (u * dS) * S
+    dRdt = R * (aR * g) - (u * dR) * R
+
+    out = np.empty(2, dtype=np.float64)
+    out[0] = dSdt
+    out[1] = dRdt
+    return out
+
+
+def ode_rhs(
+    t: float,
+    y: np.ndarray,
+    pars: tuple[float, float, float, float, float],
+    u_fun: Callable[[float], float],
+):
     S, R = y
     aS, aR, dS, dR, K = pars
-    N = S + R
-    g = max(0.0, 1.0 - N / K)
     u = u_fun(t)
-    dS_eff = u * dS
-    dR_eff = u * dR
-    dSdt = S * (aS * g) - dS_eff * S
-    dRdt = R * (aR * g) - dR_eff * R
-    return [dSdt, dRdt]
+    return _ode_rhs_core(t, S, R, aS, aR, dS, dR, K, u)
 
 
 def unpack_theta_ode(data: PatientData, theta: np.ndarray):

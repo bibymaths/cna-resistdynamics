@@ -1,9 +1,53 @@
 from __future__ import annotations
 
 import numpy as np
-
+from numba import njit
 from .utils import logit, clip01
 
+@njit(cache=True, fastmath=True, nogil=True)
+def _logit_scalar(x: float) -> float:
+    eps = 1e-6
+    if x < eps:
+        x = eps
+    elif x > 1.0 - eps:
+        x = 1.0 - eps
+    return np.log(x / (1.0 - x))
+
+@njit(cache=True, fastmath=True, nogil=True)
+def _nll_ratio_ca_jit(
+ratio_obs: np.ndarray,
+se_logit_ratio: np.ndarray,
+logca_obs: np.ndarray,
+ratio_hat: np.ndarray,
+logca_hat: np.ndarray,
+sigma_ca: float,
+w_ca: float,
+) -> float:
+    n = ratio_obs.shape[0]
+
+    # ratio part (logit scale)
+    nll_ratio = 0.0
+    for i in range(n):
+        y_obs = _logit_scalar(ratio_obs[i])
+        y_hat = _logit_scalar(ratio_hat[i])
+
+        se = se_logit_ratio[i]
+        if se < 1e-6:
+            se = 1e-6
+
+        z = (y_obs - y_hat) / se
+        nll_ratio += 0.5 * (z * z + 2.0 * np.log(se) + np.log(2.0 * np.pi))
+
+    # ca part (log scale)
+    if sigma_ca < 1e-6:
+        sigma_ca = 1e-6
+
+    nll_ca = 0.0
+    for i in range(n):
+        z = (logca_obs[i] - logca_hat[i]) / sigma_ca
+        nll_ca += 0.5 * (z * z + 2.0 * np.log(sigma_ca) + np.log(2.0 * np.pi))
+
+    return nll_ratio + w_ca * nll_ca
 
 def nll_ratio_ca(
     *,
@@ -25,18 +69,20 @@ def nll_ratio_ca(
     logca_obs = np.asarray(logca_obs, float)
     ratio_hat = np.asarray(ratio_hat, float)
     logca_hat = np.asarray(logca_hat, float)
+    sigma_ca = float(sigma_ca)
+    w_ca = float(w_ca)
 
-    y_obs = logit(clip01(ratio_obs))
-    y_hat = logit(clip01(ratio_hat))
-    se = np.clip(se_logit_ratio, 1e-3, 1e3)
-
-    nll_ratio = 0.5 * np.sum(((y_obs - y_hat) / se) ** 2 + 2 * np.log(se) + np.log(2 * np.pi))
-
-    sigma_ca = float(max(sigma_ca, 1e-6))
-    nll_ca = 0.5 * np.sum(((logca_obs - logca_hat) / sigma_ca) ** 2 + 2 * np.log(sigma_ca) + np.log(2 * np.pi))
-
-    return float(nll_ratio + w_ca * nll_ca)
-
+    return float(
+        _nll_ratio_ca_jit(
+            ratio_obs,
+            se_logit_ratio,
+            logca_obs,
+            ratio_hat,
+            logca_hat,
+            sigma_ca,
+            w_ca,
+        )
+    )
 
 def gof_metrics(
     r_obs: np.ndarray,

@@ -1,0 +1,6 @@
+[project]
+name = "tumorfits"
+version = "0.1.0"
+
+[project.scripts]
+tumorfits = "src.cli:main"

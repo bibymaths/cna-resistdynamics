@@ -233,3 +233,81 @@ def fit_ode_cohort(
     df.to_csv(out_points_csv, index=False)
     logger.info(f"Saved ODE points: {out_points_csv} rows={len(df)} patients={df['patient'].nunique()}")
     return df
+
+def fit_ode_single(
+    *,
+    data_path: str,
+    patient: str,
+    time_unit: str = "months",
+    sample_list: str | None = None,
+    use_ca125_updated: bool = False,
+    drop_failed: bool = False,
+    require_panel_sequenced: bool = False,
+    require_detected_cna: bool = False,
+    cfg: ODEFitConfig = ODEFitConfig(),
+    out_points_csv: str = "ode_points_single.csv",
+    diag_dir: str | None = None,
+) -> pd.DataFrame:
+    if diag_dir:
+        diag_dir = ensure_dir(diag_dir)
+
+    rows = fit_and_collect_points(
+        patient,
+        data_path=data_path,
+        time_unit=time_unit,
+        sample_list=sample_list,
+        use_ca125_updated=use_ca125_updated,
+        drop_failed=drop_failed,
+        require_panel_sequenced=require_panel_sequenced,
+        require_detected_cna=require_detected_cna,
+        cfg=cfg,
+        diag_dir=diag_dir,
+    )
+    df = pd.DataFrame(rows)
+    df.to_csv(out_points_csv, index=False)
+    get_logger("tumorfit.ode.single").info(f"Saved ODE points: {out_points_csv} rows={len(df)}")
+    return df
+
+
+def run_ode_cli(args) -> int:
+    cfg = ODEFitConfig(
+        n_starts=args.n_starts,
+        rel_noise=args.rel_noise,
+        n_jobs_patients=args.n_jobs_patients,
+        n_jobs_starts=args.n_jobs_starts,
+        maxiter=args.maxiter,
+        w_ca=args.w_ca,
+    )
+
+    if args.patient:
+        fit_ode_single(
+            data_path=args.data,
+            patient=args.patient,
+            time_unit=args.time_unit,
+            sample_list=args.sample_list,
+            use_ca125_updated=args.use_ca125_updated,
+            drop_failed=args.drop_failed,
+            require_panel_sequenced=args.require_panel_sequenced,
+            require_detected_cna=args.require_detected_cna,
+            cfg=cfg,
+            out_points_csv=args.out_points,
+            diag_dir=args.diag_dir,
+        )
+        return 0
+
+    # cohort
+    flags = [x.strip() for x in args.flag.split(",") if x.strip()]
+    fit_ode_cohort(
+        data_path=args.data,
+        flags=flags,
+        time_unit=args.time_unit,
+        sample_list=args.sample_list,
+        use_ca125_updated=args.use_ca125_updated,
+        drop_failed=args.drop_failed,
+        require_panel_sequenced=args.require_panel_sequenced,
+        require_detected_cna=args.require_detected_cna,
+        cfg=cfg,
+        out_points_csv=args.out_points,
+        diag_dir=args.diag_dir,
+    )
+    return 0
