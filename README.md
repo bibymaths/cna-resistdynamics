@@ -1,40 +1,140 @@
 # CNA-ResistDynamics
 
-**CNA-ResistDynamics** is a Bayesian dynamical modeling framework for inferring
-the temporal evolution of chemotherapy resistance from longitudinal
-copy-number–based measurements.
+**CNA-ResistDynamics** is a dynamical modeling framework for inferring the temporal
+evolution of chemotherapy resistance from longitudinal copy-number–based
+measurements.
 
-The project focuses on *population-level resistance dynamics* inferred from
-liquidCNA-derived resistant subclone fractions and tumor burden measurements,
-using continuous-time state-space models with explicit uncertainty propagation.
+The project models **resistant vs sensitive tumor cell populations** using:
 
-This repository does **not** reprocess raw sequencing data and does **not**
-attempt mechanistic drug PK/PD modeling. Its scope is evolutionary dynamics,
-identifiability, and quantitative interpretation of sparse longitudinal data.
+* a **lumped ODE model** (well-mixed population dynamics)
+* a **spatially resolved PDE model** (reaction–diffusion with treatment effects)
+
+Resistance dynamics are inferred from **liquidCNA-derived resistant subclone
+fractions** and **tumor burden measurements (CA125)**.
+
+This repository focuses on **evolutionary dynamics and identifiability**, not on
+raw sequencing processing or mechanistic PK/PD modeling.
 
 ---
 
-## Scientific motivation
+## Scope and non-goals
 
-Resistance to chemotherapy emerges through clonal and subclonal selection.
-While copy-number alterations (CNAs) provide strong signals of resistance
-evolution, clinical measurements are:
+**Included**
 
-- sparse in time
-- noisy
-- patient-specific
-- confounded by tumor purity and sampling context
+* Continuous-time ODE and PDE models of resistance dynamics
+* Likelihood-based fitting to longitudinal clinical data
+* Uncertainty-aware observation models
+* Cohort- and patient-level analysis via a unified CLI
 
-Most studies analyze such data descriptively.  
-This project formalizes resistance evolution as a **latent dynamical process**
-and infers it using Bayesian state-space models.
+**Not included**
 
-The framework is designed to answer questions such as:
+* Raw sequencing data processing
+* Variant calling or CNA segmentation
+* Drug PK/PD or dose–response modeling
+* Clinical decision support
 
-- How fast does resistance expand within a patient?
-- Does resistance grow monotonically or episodically?
-- How strongly does inferred resistance track tumor burden (CA125)?
-- Are resistance dynamics consistent across treatment contexts?
+---
+
+## Installation
+
+```bash
+pip install -e .
+tumorfits -h
+```
+
+---
+
+## Command-line interface
+
+All functionality is exposed via a single CLI:
+
+```bash
+tumorfits ode ...
+tumorfits pde ...
+```
+
+Run `-h` on any subcommand for full options.
+
+---
+
+## ODE workflow
+
+### Single patient
+
+```bash
+tumorfits ode \
+  --data Subclonal_ratio_estimates.extended.txt \
+  --patient UP0018 \
+  --time_unit months \
+  --n_starts 8 \
+  --maxiter 1200 \
+  --out_points ode_gof_points_UP0018.csv \
+  --diag_dir results_ode_model/per_patient_plots
+```
+
+### Cohort by `Accept_estimate` flag
+
+```bash
+tumorfits ode \
+  --data Subclonal_ratio_estimates.extended.txt \
+  --flag yes,maybe \
+  --out_points ode_gof_points_flags_yes_maybe.csv \
+  --diag_dir results_ode_model/per_patient_plots_flags_yes_maybe
+```
+
+### Cohort with QC filters and updated CA125
+
+```bash
+tumorfits ode \
+  --data Subclonal_ratio_estimates.extended.txt \
+  --flag yes,maybe \
+  --sample_list OV_patientDNA_sampleList.txt \
+  --use_ca125_updated \
+  --drop_failed \
+  --require_panel_sequenced \
+  --require_detected_cna \
+  --out_points ode_gof_points_qc.csv
+```
+
+The resulting CSV (`ode_gof_points*.csv`) is the **input to the PDE stage**.
+
+---
+
+## PDE workflow (uses ODE output)
+
+### Single patient (simulation only)
+
+```bash
+tumorfits pde \
+  --data Subclonal_ratio_estimates.extended.txt \
+  --ode_points ode_gof_points_flags_yes_maybe.csv \
+  --patient UP0018 \
+  --out_dir results_pde_model_UP0018
+```
+
+### Single patient with PDE fitting
+
+```bash
+tumorfits pde \
+  --data Subclonal_ratio_estimates.extended.txt \
+  --ode_points ode_gof_points_flags_yes_maybe.csv \
+  --patient UP0018 \
+  --fit \
+  --n_starts 10 \
+  --maxiter 150 \
+  --out_dir results_pde_model_UP0018
+```
+
+### All patients found in ODE CSV
+
+```bash
+tumorfits pde \
+  --data Subclonal_ratio_estimates.extended.txt \
+  --ode_points ode_gof_points_flags_yes_maybe.csv \
+  --patient ALL \
+  --fit \
+  --out_dir results_pde_model_all
+```
 
 ---
 
@@ -43,120 +143,134 @@ The framework is designed to answer questions such as:
 This repository ingests **derived, non-identifiable data only**.
 
 ### Required input
-From the publicly available liquidCNA Mendeley dataset:
 
-- `Subclonal_ratio_estimates.extended.txt`
-  - resistant subclone fraction (`ratio`)
-  - 95% confidence intervals (`ratio_min95`, `ratio_max95`)
-  - sampling time (`Time`)
-  - clinical context (`context`)
-  - tumor burden proxy (`CA125`)
-  - quality flag (`Accept_estimate`)
+From the public liquidCNA Mendeley dataset:
+
+* `Subclonal_ratio_estimates.extended.txt`
+
+  * resistant subclone fraction (`ratio`)
+  * uncertainty estimates (95% CI)
+  * sampling time
+  * clinical context
+  * CA125 measurements
+  * quality flags
 
 ### Optional input
-From patient-specific copy-number tables:
 
-- `Copynumber_tables_<PATIENT>.combined.500.RData`
-  - purity-corrected segment-level copy number values
-  - ΔCN relative to baseline
-  - clonal vs subclonal segment annotations
+* patient-specific copy-number segment tables (used only in extended analyses)
 
-Raw sequencing reads and controlled-access datasets (e.g. EGA) are **not**
-required.
+No raw sequencing reads or controlled-access datasets are required.
 
 ---
 
 ## Modeling approach
 
-### Latent state
+### State variables
 
-For each patient \( p \), resistance is modeled as a latent fraction
-
-$$
-r_p(t) \in (0, 1)
-$$
-
-internally represented on the logit scale
+We model **sensitive** and **resistant** tumor cell populations:
 
 $$
-z_p(t) = \log\frac{r_p(t)}{1 - r_p(t)}.
+S(t), \quad R(t)
+$$
+
+with total tumor burden:
+
+$$
+N(t) = S(t) + R(t)
+$$
+
+and resistant fraction:
+
+$$
+r(t) = \frac{R(t)}{S(t) + R(t)}.
 $$
 
 ---
 
-### Evolution model (continuous time)
+## ODE model (well-mixed)
 
-Resistance evolves as a stochastic process with context-dependent drift:
+The lumped population dynamics are:
 
 $$
-z_{p,i} = z_{p,i-1}
-+ \mu_{p,c} \Delta t_i
-+ \epsilon_{p,i},
-\quad
-\epsilon_{p,i} \sim \mathcal{N}(0, \sigma_p^2 \Delta t_i)
+\begin{aligned}
+\frac{dS}{dt} &= a_S,S\left(1 - \frac{S+R}{K}\right) - u(t),d_S,S, \
+\frac{dR}{dt} &= a_R,R\left(1 - \frac{S+R}{K}\right) - u(t),d_R,R,
+\end{aligned}
 $$
 
 where:
 
-- \( \Delta t_i \) is the time between samples
-- \( c \) is the treatment / clinical context
-- \( \mu_{p,c} \) is a selection-like drift term
-- \( \sigma_p \) captures evolutionary noise
-
-Drift parameters are modeled hierarchically across patients.
+* (a_S, a_R) are growth rates
+* (d_S, d_R) are treatment-induced death rates
+* (K) is the carrying capacity
+* (u(t) \in [0,1]) is a treatment intensity determined by clinical context
 
 ---
 
-### Observation models
+## PDE model (reaction–diffusion)
 
-#### Resistance fraction
-Observed resistant fractions (`ratio`) are treated as noisy measurements with
-uncertainty derived directly from the reported 95% confidence intervals.
-
-Measurements are modeled on the logit scale using a Gaussian approximation.
-
-#### Tumor burden (CA125)
-CA125 is modeled as a log-normal observation coupled to the latent resistance
-state:
+To model spatial heterogeneity, the PDE extends the ODE with diffusion:
 
 $$
-\log(\text{CA125}_{p,i})
-\sim
-\mathcal{N}(\alpha_p + \beta z_{p,i}, \sigma_c^2)
-$$
+\begin{aligned}
+\frac{\partial S(x,t)}{\partial t}
+&=
+D_S \nabla^2 S
 
-This allows quantitative testing of whether inferred resistance dynamics
-predict disease burden.
+* a_S S\left(1 - \frac{S+R}{K}\right)
+
+- u(t),d_S,S, [6pt]
+  \frac{\partial R(x,t)}{\partial t}
+  &=
+  D_R \nabla^2 R
+
+* a_R R\left(1 - \frac{S+R}{K}\right)
+
+- u(t),d_R,R.
+  \end{aligned}
+  $$
+
+where:
+
+* (D_S, D_R) are diffusion coefficients
+* spatial domain is one-dimensional: (x \in [0, L])
+* zero-flux (Neumann) boundary conditions are used
+
+The PDE is solved via **operator splitting**:
+
+* explicit Euler for reactions
+* implicit backward Euler for diffusion
 
 ---
 
-### Optional segment-level model
+## Observation models
 
-When segment-level CNA data are available, individual subclonal segments can be
-modeled as reporters of the resistant fraction:
+### Resistant fraction
+
+Observed resistant fractions are modeled on the **logit scale** with
+Gaussian noise derived from reported confidence intervals.
+
+### Tumor burden (CA125)
+
+CA125 is linked to total tumor burden via:
 
 $$
-\Delta \text{CN}_{s}(t) \propto r_p(t)
+\log(\text{CA125}(t)) = \log\big(c_0 + \gamma \int_0^L (S+R),dx\big) + \epsilon,
+\quad
+\epsilon \sim \mathcal{N}(0, \sigma_{CA}^2).
 $$
-
-This removes reliance on liquidCNA summary ratios and enables reconstruction of
-resistance dynamics directly from CNA evidence.
 
 ---
 
 ## Inference
 
-Models are implemented in:
+* ODE and PDE parameters are fit via **multi-start likelihood optimization**
+* No MCMC is required for the main pipeline
+* Outputs include:
 
-- **PyMC** (recommended for exploration and diagnostics)
-- **Stan / cmdstanpy** (recommended for performance and publication)
-
-Inference is fully Bayesian and yields:
-
-- posterior trajectories of resistance per patient
-- uncertainty-aware growth / selection rates
-- coupling strength between resistance and CA125
-- predictive distributions for future observations
+  * fitted trajectories
+  * goodness-of-fit metrics
+  * patient- and cohort-level summaries
 
 ---
 
@@ -164,22 +278,13 @@ Inference is fully Bayesian and yields:
 
 ```text
 CNA-ResistDynamics/
+├── tumorfits/        # Python package (ODE, PDE, CLI)
 ├── data/
-│   ├── Subclonal_ratio_estimates.extended.txt
-│   └── Copynumber_tables_<PATIENT>.RData
-├── preprocessing/
-│   ├── prepare_stan_data.py
-│   └── qc_filters.py
-├── models/
-│   ├── resistance_state_space.stan
-│   └── resistance_state_space_pymc.py
-├── analysis/
-│   ├── posterior_checks.ipynb
-│   └── trajectory_plots.ipynb
-├── figures/
+├── results_ode_model/
+├── results_pde_model/
 ├── README.md
 └── LICENSE
-````
+```
 
 ---
 
@@ -188,66 +293,30 @@ CNA-ResistDynamics/
 This repository is suitable for:
 
 * evolutionary modeling of therapy resistance
-* state-space modeling with sparse clinical data
-* method development for resistance monitoring
-* hypothesis testing prior to adaptive therapy trials
+* mechanistic interpretation of liquidCNA dynamics
+* methodological development for resistance monitoring
 
-It is **not** intended for clinical deployment.
+It is **not intended for clinical deployment**.
 
 ---
 
 ## Data availability
 
-This project uses **derived, non-identifiable copy-number and resistance estimates** from the following public dataset:
+Data originate from:
 
-**Mendeley Data**
-Hockings, H.; Lakatos, E.; Huang, W.; et al.
-*Copy number profiles and liquidCNA algorithm output for patient samples presented in “Adaptive Therapy Exploits Fitness Deficits in Chemotherapy-Resistant Ovarian Cancer to Achieve Long-Term Tumor Control”*
-Version 1, 2025
-DOI: [https://doi.org/10.17632/m93sk9n767.1](https://doi.org/10.17632/m93sk9n767.1)
-
-The dataset includes:
-
-* Longitudinal liquidCNA-derived resistant subclone fractions
-* Associated uncertainty estimates
-* CA125 measurements
-* Purity-corrected copy-number segment tables (QDNAseq / liquidCNA)
-
-No raw sequencing reads or controlled-access data are required.
-
----
-
-## Related publication
-
-The data originate from the following peer-reviewed study:
-
-Hockings, H., Lakatos, E., Huang, W., Mössner, M., Khan, M. A., Bakali, N., McDermott, J., Smith, K., Baker, A.-M., Graham, T. A., & Lockley, M.
-**Adaptive Therapy Exploits Fitness Deficits in Chemotherapy-Resistant Ovarian Cancer to Achieve Long-Term Tumor Control.**
-*Cancer Research*, 85(18), 3503–3517 (2025).
+**Hockings et al. (2025)**
+*Adaptive Therapy Exploits Fitness Deficits in Chemotherapy-Resistant Ovarian Cancer to Achieve Long-Term Tumor Control*
+*Cancer Research*, 85(18), 3503–3517
 DOI: [https://doi.org/10.1158/0008-5472.CAN-25-0351](https://doi.org/10.1158/0008-5472.CAN-25-0351)
 
----
-
-## Citation guidance
-
-If you use this repository, please cite **both**:
-
-1. The original *Cancer Research* article (for biological context and experimental design)
-2. The Mendeley Data dataset (for derived copy-number and resistance estimates)
-
-Example BibTeX entries can be added upon request.
-
----
-
-## Notes on data use
-
-* All analyses in this repository operate on **derived outputs only**
-* No patient-identifiable information is included
-* This project complies with the data-use terms specified by the dataset authors
+Mendeley Data (derived outputs):
+[https://doi.org/10.17632/m93sk9n767.1](https://doi.org/10.17632/m93sk9n767.1)
 
 ---
 
 ## License
 
-This project is released under an open-source license.
+Released under an open-source license.
 See `LICENSE` for details.
+
+---

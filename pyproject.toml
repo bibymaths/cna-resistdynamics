@@ -1,0 +1,10 @@
+[project]
+name = "tumorfits"
+version = "0.1.0"
+
+[project.scripts]
+tumorfits = "tumorfits.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tumorfits*"]
