@@ -64,6 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
     pde.add_argument("--w_ca", type=float, default=1.0)
 
     pde.add_argument("--maxiter", type=int, default=150)
+    pde.add_argument("--maxfev", type=int, default=10000)
     pde.add_argument("--n_starts", type=int, default=10)
     pde.add_argument("--n_jobs_starts", type=int, default=-1)
 

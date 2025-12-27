@@ -11,8 +11,10 @@ from .pdeio import load_ode_physical_params_map, load_u_ctx_from_ode_points
 from .pdemodel import PDEConfig
 from .pdeplotio import plot_pde_fit
 from .pdesolve import solve_pde
+from .simpde import run_pde_heatmap
 from .timelog import get_logger
 from .utils import ensure_dir
+
 
 
 def run_pde_for_patient(
@@ -46,7 +48,6 @@ def run_pde_for_patient(
     pmap = load_ode_physical_params_map(ode_points_csv)
     base = pmap.get(patient, [0.5, 0.3, 0.4, 0.1, 1.0])
     logger.info(f"{patient}: PDE base params from ODE? {'yes' if patient in pmap else 'no'} base={np.round(base, 4)}")
-
     params = np.asarray(base, float)
     if do_fit:
         params = multistart_fit_pde(params, cfg, data)
@@ -119,6 +120,7 @@ def run_pde_cohort(
 
 
 def run_pde_cli(args) -> int:
+    logger = get_logger("tumorfit.PDE")
     cfg = PDEConfig(
         L=args.L,
         n_cells=args.n_cells,
@@ -130,6 +132,7 @@ def run_pde_cli(args) -> int:
         sigma_ca=args.sigma_ca,
         w_ca=args.w_ca,
         maxiter=args.maxiter,
+        maxfev=args.maxfev,
         n_starts=args.n_starts,
         n_jobs_starts=args.n_jobs_starts
     )
@@ -149,6 +152,16 @@ def run_pde_cli(args) -> int:
             out_dir=args.out_dir,
             do_fit=args.fit,
         )
+        out = run_pde_heatmap(
+            data_path=args.data,
+            ode_points_csv=args.ode_points,
+            patient=args.patient,
+            cfg=cfg,
+            out_dir=args.out_dir,
+            time_unit=args.time_unit,
+            sample_list=args.sample_list,
+        )
+        logger.info(f"Saved heatmap: {out}")
         return 0
 
     run_pde_cohort(
@@ -164,4 +177,14 @@ def run_pde_cli(args) -> int:
         out_dir=args.out_dir,
         do_fit=args.fit,
     )
+    out = run_pde_heatmap(
+        data_path=args.data,
+        ode_points_csv=args.ode_points,
+        patient=args.patient,
+        cfg=cfg,
+        out_dir=args.out_dir,
+        time_unit=args.time_unit,
+        sample_list=args.sample_list,
+    )
+    logger.info(f"Saved heatmap: {out}")
     return 0

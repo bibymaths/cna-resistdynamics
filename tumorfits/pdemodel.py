@@ -26,6 +26,7 @@ class PDEConfig:
 
     # fitting
     maxiter: int = 150
+    maxfev: int = 500
     n_starts: int = 10
     n_jobs_starts: int = -1
 
