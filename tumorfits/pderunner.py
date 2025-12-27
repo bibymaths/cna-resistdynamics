@@ -120,7 +120,6 @@ def run_pde_cohort(
 
 
 def run_pde_cli(args) -> int:
-    logger = get_logger("tumorfit.PDE")
     cfg = PDEConfig(
         L=args.L,
         n_cells=args.n_cells,
@@ -152,16 +151,6 @@ def run_pde_cli(args) -> int:
             out_dir=args.out_dir,
             do_fit=args.fit,
         )
-        out = run_pde_heatmap(
-            data_path=args.data,
-            ode_points_csv=args.ode_points,
-            patient=args.patient,
-            cfg=cfg,
-            out_dir=args.out_dir,
-            time_unit=args.time_unit,
-            sample_list=args.sample_list,
-        )
-        logger.info(f"Saved heatmap: {out}")
         return 0
 
     run_pde_cohort(
@@ -177,14 +166,4 @@ def run_pde_cli(args) -> int:
         out_dir=args.out_dir,
         do_fit=args.fit,
     )
-    out = run_pde_heatmap(
-        data_path=args.data,
-        ode_points_csv=args.ode_points,
-        patient=args.patient,
-        cfg=cfg,
-        out_dir=args.out_dir,
-        time_unit=args.time_unit,
-        sample_list=args.sample_list,
-    )
-    logger.info(f"Saved heatmap: {out}")
     return 0
