@@ -14,10 +14,13 @@ def run_single_start(seed: int, base_params: np.ndarray, cfg: PDEConfig, data: P
     noise = rng.uniform(0.8, 1.2, size=base_params.size)
     x0 = base_params * noise
 
-    def obj(p):
-        return solve_pde(p, cfg, data, comm=None, return_history=False)[0]
+    def obj(p): 
+        # print progress and monitor cost  
+        cost = solve_pde(p, cfg, data, comm=None, return_history=False)[0]
+        print(f"\nPatient ID: {data.patient} | Starts: {seed + 1}/{cfg.n_starts} | Cost: {cost:.2f}")
+        return cost
 
-    res = minimize(obj, x0, method="Nelder-Mead", options={"maxiter": cfg.maxiter, "disp": False})
+    res = minimize(obj, x0, method="Powell", options={"maxiter": cfg.maxiter, "disp": False})
     return float(res.fun), np.asarray(res.x, float)
 
 

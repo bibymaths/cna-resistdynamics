@@ -12,7 +12,7 @@ from .metrics import gof_metrics, nll_ratio_ca
 from .odefit import multistart_minimize
 from .odeio import PatientData, get_patients_with_flag, load_patient_data
 from .odemodel import simulate_ode, ode_theta_names
-from .odeplotio import save_patient_states_plots
+from .odeplotio import save_patient_states_plots, plot_gof_scatter_all
 from .timelog import get_logger
 from .utils import invlogit, logit, ensure_dir
 
@@ -296,7 +296,7 @@ def run_ode_cli(args) -> int:
 
     # cohort
     flags = [x.strip() for x in args.flag.split(",") if x.strip()]
-    fit_ode_cohort(
+    df = fit_ode_cohort(
         data_path=args.data,
         flags=flags,
         time_unit=args.time_unit,
@@ -309,4 +309,5 @@ def run_ode_cli(args) -> int:
         out_points_csv=args.out_points,
         diag_dir=args.diag_dir,
     )
+    plot_gof_scatter_all(df, out_prefix="goodness_of_fit")
     return 0

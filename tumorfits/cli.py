@@ -25,7 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--flag", help="Comma-separated Accept_estimate values, e.g. yes or yes,maybe")
 
     ode.add_argument("--out_points", default="ode_gof_points.csv")
-    ode.add_argument("--diag_dir", default=None, help="If set: per-patient plots/CSVs")
+    ode.add_argument("--diag_dir", default="results_ODE", help="If set: per-patient plots/CSVs")
 
     # fit config
     ode.add_argument("--n_starts", type=int, default=8)
