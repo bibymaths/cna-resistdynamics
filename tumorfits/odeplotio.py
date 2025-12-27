@@ -60,13 +60,13 @@ def plot_gof_scatter_all(df_points: pd.DataFrame, out_prefix: str = "gof"):
 
 
 def save_patient_states_plots(
-    data: PatientData,
-    theta: np.ndarray,
-    out_dir: str,
-    *,
-    tag: str = "ODE",
-    save_csv: bool = True,
-    dpi: int = 300,
+        data: PatientData,
+        theta: np.ndarray,
+        out_dir: str,
+        *,
+        tag: str = "ODE",
+        save_csv: bool = True,
+        dpi: int = 300,
 ):
     out_dir = ensure_dir(out_dir)
     pid = str(data.patient)

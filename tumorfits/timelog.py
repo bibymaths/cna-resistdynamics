@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import logging
-import os
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 def get_logger(name: str = "tumorfit", level: int = logging.INFO) -> logging.Logger:

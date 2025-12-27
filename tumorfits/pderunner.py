@@ -1,36 +1,34 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
 
 from .odeio import load_patient_data
+from .pdefit import multistart_fit_pde
 from .pdeio import load_ode_physical_params_map, load_u_ctx_from_ode_points
 from .pdemodel import PDEConfig
-from .pdefit import multistart_fit_pde
-from .pdesolve import solve_pde
 from .pdeplotio import plot_pde_fit
+from .pdesolve import solve_pde
 from .timelog import get_logger
 from .utils import ensure_dir
 
 
 def run_pde_for_patient(
-    *,
-    data_path: str,
-    ode_points_csv: str,
-    patient: str,
-    cfg: PDEConfig,
-    time_unit: str = "months",
-    sample_list: str | None = None,
-    use_ca125_updated: bool = False,
-    drop_failed: bool = False,
-    require_panel_sequenced: bool = False,
-    require_detected_cna: bool = False,
-    out_dir: str = "results_pde_model",
-    do_fit: bool = True,
+        *,
+        data_path: str,
+        ode_points_csv: str,
+        patient: str,
+        cfg: PDEConfig,
+        time_unit: str = "months",
+        sample_list: str | None = None,
+        use_ca125_updated: bool = False,
+        drop_failed: bool = False,
+        require_panel_sequenced: bool = False,
+        require_detected_cna: bool = False,
+        out_dir: str = "results_pde_model",
+        do_fit: bool = True,
 ) -> tuple[float, dict | None, pd.DataFrame | None]:
     logger = get_logger("tumorfit.pde")
 
@@ -47,7 +45,7 @@ def run_pde_for_patient(
     cfg.u_ctx = load_u_ctx_from_ode_points(ode_points_csv, patient, data.context_names)
     pmap = load_ode_physical_params_map(ode_points_csv)
     base = pmap.get(patient, [0.5, 0.3, 0.4, 0.1, 1.0])
-    logger.info(f"{patient}: PDE base params from ODE? {'yes' if patient in pmap else 'no'} base={np.round(base,4)}")
+    logger.info(f"{patient}: PDE base params from ODE? {'yes' if patient in pmap else 'no'} base={np.round(base, 4)}")
 
     params = np.asarray(base, float)
     if do_fit:
@@ -63,26 +61,27 @@ def run_pde_for_patient(
 
     return nll, stats, df_traj
 
-# src/pderunner.py  (append)
+
+# tumorfits/pderunner.py  (append)
 def patients_from_ode_points(ode_points_csv: str) -> list[str]:
     df = pd.read_csv(ode_points_csv, usecols=["patient"])
     return sorted(df["patient"].astype(str).unique().tolist())
 
 
 def run_pde_cohort(
-    *,
-    data_path: str,
-    ode_points_csv: str,
-    cfg: PDEConfig,
-    time_unit: str = "months",
-    sample_list: str | None = None,
-    use_ca125_updated: bool = False,
-    drop_failed: bool = False,
-    require_panel_sequenced: bool = False,
-    require_detected_cna: bool = False,
-    out_dir: str = "results_pde_model",
-    do_fit: bool = True,
-    patients: list[str] | None = None,
+        *,
+        data_path: str,
+        ode_points_csv: str,
+        cfg: PDEConfig,
+        time_unit: str = "months",
+        sample_list: str | None = None,
+        use_ca125_updated: bool = False,
+        drop_failed: bool = False,
+        require_panel_sequenced: bool = False,
+        require_detected_cna: bool = False,
+        out_dir: str = "results_pde_model",
+        do_fit: bool = True,
+        patients: list[str] | None = None,
 ) -> pd.DataFrame:
     logger = get_logger("tumorfit.pde.cohort")
     out_dir = ensure_dir(out_dir)

@@ -9,7 +9,6 @@ from scipy.integrate import solve_ivp
 from .odeio import PatientData
 from .utils import invlogit, safe_log
 
-
 ODE_THETA_BASE_NAMES: List[str] = [
     "log_aS",
     "logit_aR_over_aS",
@@ -42,6 +41,7 @@ def make_u_of_t(t_samples: np.ndarray, ctx_samples: np.ndarray, u_ctx: np.ndarra
 
     return u
 
+
 @njit(cache=True)
 def _ode_rhs_core(t: float, S: float, R: float,
                   aS: float, aR: float, dS: float, dR: float, K: float,
@@ -61,10 +61,10 @@ def _ode_rhs_core(t: float, S: float, R: float,
 
 
 def ode_rhs(
-    t: float,
-    y: np.ndarray,
-    pars: tuple[float, float, float, float, float],
-    u_fun: Callable[[float], float],
+        t: float,
+        y: np.ndarray,
+        pars: tuple[float, float, float, float, float],
+        u_fun: Callable[[float], float],
 ):
     S, R = y
     aS, aR, dS, dR, K = pars
@@ -80,7 +80,7 @@ def unpack_theta_ode(data: PatientData, theta: np.ndarray):
     theta = np.asarray(theta, float)
     C = len(data.context_names)
     if theta.size != 10 + C:
-        raise ValueError(f"theta size mismatch: got {theta.size}, expected {10+C}")
+        raise ValueError(f"theta size mismatch: got {theta.size}, expected {10 + C}")
 
     log_aS, logit_aR_ratio, log_dS, logit_dR_ratio, log_K, log_N0, logit_r0, log_gamma, log_ca0, log_sigma = theta[:10]
     logit_u = theta[10:10 + C]  # ✅ correct

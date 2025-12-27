@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
 from typing import Dict, List
 
 import numpy as np
@@ -19,8 +18,8 @@ def load_ode_long_theta(ode_points_csv: str, patient: str, context_names: list[s
     sub["var_norm"] = sub["var"].astype(str).str.strip().str.lower()
 
     base = [
-        "log_aS","logit_aR_over_aS","log_dS","logit_dR_over_dS","log_K",
-        "log_N0","logit_r0","log_gamma","log_ca0","log_sigma_ca",
+        "log_aS", "logit_aR_over_aS", "log_dS", "logit_dR_over_dS", "log_K",
+        "log_N0", "logit_r0", "log_gamma", "log_ca0", "log_sigma_ca",
     ]
     full = base + [f"logit_u_ctx[{c}]" for c in context_names]
 
@@ -40,6 +39,7 @@ def load_ode_long_theta(ode_points_csv: str, patient: str, context_names: list[s
         raise ValueError(f"Missing theta entries for {patient}: {missing}")
 
     return np.asarray(theta, float)
+
 
 def load_ode_physical_params_map(ode_points_csv: str) -> Dict[str, list[float]]:
     """
@@ -87,6 +87,7 @@ def load_ode_physical_params_map(ode_points_csv: str) -> Dict[str, list[float]]:
         out[pid] = [aS, aR, dS, dR, K]
 
     return out
+
 
 def load_u_ctx_from_ode_points(ode_points_csv: str, patient: str, context_names: List[str]) -> np.ndarray:
     """

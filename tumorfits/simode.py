@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pandas as pd
-import numpy as np
 
 from .odeio import load_patient_data
 from .odemodel import simulate_states
@@ -9,12 +8,12 @@ from .pdeio import load_ode_long_theta  # reuse ODE-theta loader
 
 
 def simulate_ode_from_saved_theta(
-    *,
-    data_path: str,
-    ode_points_csv: str,
-    patient: str,
-    time_unit: str = "months",
-    sample_list: str | None = None,
+        *,
+        data_path: str,
+        ode_points_csv: str,
+        patient: str,
+        time_unit: str = "months",
+        sample_list: str | None = None,
 ) -> pd.DataFrame:
     """
     Load theta for a patient from the long-table ODE points CSV and simulate states.

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from .utils import ensure_dir
 
@@ -29,7 +30,8 @@ def plot_pde_fit(df_traj: pd.DataFrame, out_path: str, *, title: str = "") -> st
     return out_path
 
 
-def plot_heatmaps(x: np.ndarray, t: np.ndarray, S_mat: np.ndarray, R_mat: np.ndarray, out_path: str, *, title: str = "") -> str:
+def plot_heatmaps(x: np.ndarray, t: np.ndarray, S_mat: np.ndarray, R_mat: np.ndarray, out_path: str, *,
+                  title: str = "") -> str:
     ensure_dir(os.path.dirname(out_path) or ".")
     total = S_mat + R_mat
     frac = np.divide(R_mat, total, out=np.zeros_like(R_mat), where=total > 1e-9)

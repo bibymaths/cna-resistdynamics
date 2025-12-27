@@ -42,16 +42,16 @@ def _is_true(x) -> bool:
 
 
 def load_patient_data(
-    path: str,
-    patient: str,
-    *,
-    time_unit: str = "months",
-    sample_list_path: Optional[str] = None,
-    use_ca125_updated: bool = False,
-    drop_failed: bool = False,
-    require_panel_sequenced: bool = False,
-    require_detected_cna: bool = False,
-    accept_flags: Tuple[str, ...] = ("yes", "maybe"),
+        path: str,
+        patient: str,
+        *,
+        time_unit: str = "months",
+        sample_list_path: Optional[str] = None,
+        use_ca125_updated: bool = False,
+        drop_failed: bool = False,
+        require_panel_sequenced: bool = False,
+        require_detected_cna: bool = False,
+        accept_flags: Tuple[str, ...] = ("yes", "maybe"),
 ) -> PatientData:
     """
     Loads Subclonal_ratio_estimates.extended.txt (tab-separated)

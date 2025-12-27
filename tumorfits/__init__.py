@@ -2,7 +2,7 @@
 Package: ODE -> PDE tumor fitter.
 
 Run:
-  python -m src.main --help
+  python -m tumorfits.main --help
 """
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ __all__ = [
     "pdeplotio",
     "simode",
     "simpde",
+    "odefit",
 ]
 __version__ = "0.1.0"
 __author__ = "Abhinav Mishra"

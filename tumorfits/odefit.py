@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import partial
 from typing import Callable, Sequence
 
 import numpy as np
@@ -21,17 +20,17 @@ class MultiStartResult:
 
 
 def multistart_minimize(
-    fun: Callable[[np.ndarray], float],
-    x0: np.ndarray,
-    bounds: Sequence[tuple[float, float]],
-    *,
-    n_starts: int = 1,
-    rel_noise: float = 0.3,
-    seed: int = 0,
-    method: str = "L-BFGS-B",
-    maxiter: int = 800,
-    n_jobs_starts: int = 1,
-    logger_name: str = "tumorfit.fit",
+        fun: Callable[[np.ndarray], float],
+        x0: np.ndarray,
+        bounds: Sequence[tuple[float, float]],
+        *,
+        n_starts: int = 1,
+        rel_noise: float = 0.3,
+        seed: int = 0,
+        method: str = "L-BFGS-B",
+        maxiter: int = 800,
+        n_jobs_starts: int = 1,
+        logger_name: str = "tumorfit.fit",
 ) -> MultiStartResult:
     """
     Generic multi-start wrapper around scipy.optimize.minimize.
@@ -55,7 +54,8 @@ def multistart_minimize(
         try:
             res = minimize(fun, s, method=method, bounds=bounds, options={"maxiter": maxiter})
             val = float(res.fun) if np.isfinite(res.fun) else np.inf
-            logger.info(f"start {i}/{len(starts)} fun={val:.4g} success={bool(res.success)} nit={getattr(res,'nit',None)} dt={tm.s():.2f}s")
+            logger.info(
+                f"start {i}/{len(starts)} fun={val:.4g} success={bool(res.success)} nit={getattr(res, 'nit', None)} dt={tm.s():.2f}s")
             return val, res
         except Exception as e:
             logger.warning(f"start {i}/{len(starts)} exception: {type(e).__name__}: {e} dt={tm.s():.2f}s")

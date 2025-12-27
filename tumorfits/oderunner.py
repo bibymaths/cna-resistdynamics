@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import os
-import traceback
 from dataclasses import dataclass
 from functools import partial
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
-from .odefit import multistart_minimize
 from .metrics import gof_metrics, nll_ratio_ca
+from .odefit import multistart_minimize
 from .odeio import PatientData, get_patients_with_flag, load_patient_data
 from .odemodel import simulate_ode, ode_theta_names
 from .odeplotio import save_patient_states_plots
@@ -51,29 +49,29 @@ def initial_theta_and_bounds(data: PatientData) -> tuple[np.ndarray, list[tuple[
     C = len(data.context_names)
 
     x0 = np.zeros(10 + C, dtype=float)
-    x0[0] = np.log(0.5)                       # log_aS
-    x0[1] = logit(np.array([0.6]))[0]         # logit_aR_over_aS
-    x0[2] = np.log(0.8)                       # log_dS
-    x0[3] = logit(np.array([0.05]))[0]        # logit_dR_over_dS
-    x0[4] = np.log(1e6)                       # log_K
-    x0[5] = np.log(1e4)                       # log_N0
+    x0[0] = np.log(0.5)  # log_aS
+    x0[1] = logit(np.array([0.6]))[0]  # logit_aR_over_aS
+    x0[2] = np.log(0.8)  # log_dS
+    x0[3] = logit(np.array([0.05]))[0]  # logit_dR_over_dS
+    x0[4] = np.log(1e6)  # log_K
+    x0[5] = np.log(1e4)  # log_N0
     x0[6] = logit(np.array([np.clip(data.ratio[0], 1e-4, 1 - 1e-4)]))[0]  # logit_r0
-    x0[7] = np.log(1e-3)                      # log_gamma
-    x0[8] = np.mean(data.log_ca125) - 1.0     # log_ca0
-    x0[9] = np.log(0.5)                       # log_sigma_ca
-    x0[10:] = logit(np.full(C, 0.5))          # logit_u_ctx[...]
+    x0[7] = np.log(1e-3)  # log_gamma
+    x0[8] = np.mean(data.log_ca125) - 1.0  # log_ca0
+    x0[9] = np.log(0.5)  # log_sigma_ca
+    x0[10:] = logit(np.full(C, 0.5))  # logit_u_ctx[...]
 
     bnds: list[tuple[float, float]] = []
-    bnds += [(-10, 5)]    # log_aS
-    bnds += [(-10, 10)]   # logit_aR_over_aS
-    bnds += [(-10, 5)]    # log_dS
-    bnds += [(-10, 10)]   # logit_dR_over_dS
-    bnds += [(0, 20)]     # log_K
-    bnds += [(-5, 30)]    # log_N0
-    bnds += [(-10, 10)]   # logit_r0
-    bnds += [(-20, 5)]    # log_gamma
-    bnds += [(-5, 15)]    # log_ca0
-    bnds += [(-3, 5)]     # log_sigma_ca
+    bnds += [(-10, 5)]  # log_aS
+    bnds += [(-10, 10)]  # logit_aR_over_aS
+    bnds += [(-10, 5)]  # log_dS
+    bnds += [(-10, 10)]  # logit_dR_over_dS
+    bnds += [(0, 20)]  # log_K
+    bnds += [(-5, 30)]  # log_N0
+    bnds += [(-10, 10)]  # logit_r0
+    bnds += [(-20, 5)]  # log_gamma
+    bnds += [(-5, 15)]  # log_ca0
+    bnds += [(-3, 5)]  # log_sigma_ca
     bnds += [(-10, 10)] * C  # logit_u_ctx
     return x0, bnds
 
@@ -87,7 +85,7 @@ def fit_ode(data: PatientData, cfg: ODEFitConfig) -> tuple[np.ndarray, dict]:
         bounds=bnds,
         n_starts=cfg.n_starts,
         rel_noise=cfg.rel_noise,
-        seed=hash(data.patient) % (2**32),
+        seed=hash(data.patient) % (2 ** 32),
         method="L-BFGS-B",
         maxiter=cfg.maxiter,
         n_jobs_starts=cfg.n_jobs_starts,
@@ -106,17 +104,17 @@ def fit_ode(data: PatientData, cfg: ODEFitConfig) -> tuple[np.ndarray, dict]:
 
 
 def fit_and_collect_points(
-    patient_id: str,
-    *,
-    data_path: str,
-    time_unit: str,
-    sample_list: str | None,
-    use_ca125_updated: bool,
-    drop_failed: bool,
-    require_panel_sequenced: bool,
-    require_detected_cna: bool,
-    cfg: ODEFitConfig,
-    diag_dir: str | None = None,
+        patient_id: str,
+        *,
+        data_path: str,
+        time_unit: str,
+        sample_list: str | None,
+        use_ca125_updated: bool,
+        drop_failed: bool,
+        require_panel_sequenced: bool,
+        require_detected_cna: bool,
+        cfg: ODEFitConfig,
+        diag_dir: str | None = None,
 ) -> list[dict]:
     data = load_patient_data(
         data_path, patient_id,
@@ -192,18 +190,18 @@ def fit_and_collect_points(
 
 
 def fit_ode_cohort(
-    *,
-    data_path: str,
-    flags: list[str],
-    time_unit: str = "months",
-    sample_list: str | None = None,
-    use_ca125_updated: bool = False,
-    drop_failed: bool = False,
-    require_panel_sequenced: bool = False,
-    require_detected_cna: bool = False,
-    cfg: ODEFitConfig = ODEFitConfig(),
-    out_points_csv: str = "ode_gof_points.csv",
-    diag_dir: str | None = None,
+        *,
+        data_path: str,
+        flags: list[str],
+        time_unit: str = "months",
+        sample_list: str | None = None,
+        use_ca125_updated: bool = False,
+        drop_failed: bool = False,
+        require_panel_sequenced: bool = False,
+        require_detected_cna: bool = False,
+        cfg: ODEFitConfig = ODEFitConfig(),
+        out_points_csv: str = "ode_gof_points.csv",
+        diag_dir: str | None = None,
 ) -> pd.DataFrame:
     logger = get_logger("tumorfit.ode.cohort")
     patients = get_patients_with_flag(data_path, flags=flags)
@@ -234,19 +232,20 @@ def fit_ode_cohort(
     logger.info(f"Saved ODE points: {out_points_csv} rows={len(df)} patients={df['patient'].nunique()}")
     return df
 
+
 def fit_ode_single(
-    *,
-    data_path: str,
-    patient: str,
-    time_unit: str = "months",
-    sample_list: str | None = None,
-    use_ca125_updated: bool = False,
-    drop_failed: bool = False,
-    require_panel_sequenced: bool = False,
-    require_detected_cna: bool = False,
-    cfg: ODEFitConfig = ODEFitConfig(),
-    out_points_csv: str = "ode_points_single.csv",
-    diag_dir: str | None = None,
+        *,
+        data_path: str,
+        patient: str,
+        time_unit: str = "months",
+        sample_list: str | None = None,
+        use_ca125_updated: bool = False,
+        drop_failed: bool = False,
+        require_panel_sequenced: bool = False,
+        require_detected_cna: bool = False,
+        cfg: ODEFitConfig = ODEFitConfig(),
+        out_points_csv: str = "ode_points_single.csv",
+        diag_dir: str | None = None,
 ) -> pd.DataFrame:
     if diag_dir:
         diag_dir = ensure_dir(diag_dir)
