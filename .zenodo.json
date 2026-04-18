@@ -1,7 +1,6 @@
 {
   "title": "CNA-ResistDynamics: Dynamical modelling of chemotherapy resistance from liquidCNA measurements",
   "description": "ODE and PDE models for inferring the temporal evolution of chemotherapy resistance in ovarian cancer from longitudinal copy-number-based measurements (liquidCNA subclonal fractions) and CA125 tumour burden.",
-  "version": "0.1.0",
   "upload_type": "software",
   "access_right": "open",
   "license": "MIT",
