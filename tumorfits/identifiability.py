@@ -68,7 +68,7 @@ def run_sobol_sensitivity_ode(
     data: PatientData,
     names: list[str],
     bounds: list[tuple[float, float]],
-    cfg: SensitivityConfig = SensitivityConfig(),
+    cfg: SensitivityConfig | None = None,
     w_ca: float = 0.5,
     out_prefix: str = "salib_ode",
 ) -> dict[str, pd.DataFrame]:
@@ -76,6 +76,8 @@ def run_sobol_sensitivity_ode(
     Sobol sensitivity for ODE.
     'names' and 'bounds' must correspond to the ODE theta vector you want to vary.
     """
+    if cfg is None:
+        cfg = SensitivityConfig()
     # Local imports so users without SALib don't break ODE/PDE usage.
     from SALib.analyze import sobol
     from SALib.sample import saltelli
@@ -117,13 +119,15 @@ def run_sobol_sensitivity_pde(
     pde_cfg: PDEConfig,
     names: list[str],
     bounds: list[tuple[float, float]],
-    cfg: SensitivityConfig = SensitivityConfig(),
+    cfg: SensitivityConfig | None = None,
     out_prefix: str = "salib_pde",
 ) -> dict[str, pd.DataFrame]:
     """
     Sobol sensitivity for PDE parameters in physical space.
     Typical names: ["aS","aR","dS","dR","K"].
     """
+    if cfg is None:
+        cfg = SensitivityConfig()
     from SALib.analyze import sobol
     from SALib.sample import saltelli
 

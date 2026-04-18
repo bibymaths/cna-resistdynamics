@@ -149,7 +149,7 @@ def fit_and_collect_points(
             pass
 
     # store theta rows (long format)
-    for name, val in zip(ode_theta_names(data.context_names), theta):
+    for name, val in zip(ode_theta_names(data.context_names), theta, strict=False):
         rows.append(
             {
                 "patient": patient_id,
@@ -211,10 +211,12 @@ def fit_ode_cohort(
     drop_failed: bool = False,
     require_panel_sequenced: bool = False,
     require_detected_cna: bool = False,
-    cfg: ODEFitConfig = ODEFitConfig(),
+    cfg: ODEFitConfig | None = None,
     out_points_csv: str = "ode_gof_points.csv",
     diag_dir: str | None = None,
 ) -> pd.DataFrame:
+    if cfg is None:
+        cfg = ODEFitConfig()
     logger = get_logger("tumorfit.ode.cohort")
     patients = get_patients_with_flag(data_path, flags=flags)
     logger.info(f"ODE cohort: patients={len(patients)} flags={flags}")
@@ -257,10 +259,12 @@ def fit_ode_single(
     drop_failed: bool = False,
     require_panel_sequenced: bool = False,
     require_detected_cna: bool = False,
-    cfg: ODEFitConfig = ODEFitConfig(),
+    cfg: ODEFitConfig | None = None,
     out_points_csv: str = "ode_points_single.csv",
     diag_dir: str | None = None,
 ) -> pd.DataFrame:
+    if cfg is None:
+        cfg = ODEFitConfig()
     if diag_dir:
         diag_dir = ensure_dir(diag_dir)
 
