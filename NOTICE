@@ -1,0 +1,25 @@
+CNA-ResistDynamics
+Copyright 2025 Abhinav Mishra
+
+This product is licensed under the MIT License.
+See the LICENSE file in the root of this repository.
+
+This software was developed as part of research on chemotherapy resistance
+dynamics in ovarian cancer.
+
+Data used with this software is sourced from:
+  Hockings et al. (2025). Subclonal copy-number alterations drive resistance
+  to platinum-based chemotherapy in ovarian cancer.
+  Cancer Research. DOI: 10.1158/0008-5472.CAN-25-0351
+
+  Mendeley Dataset: DOI 10.17632/m93sk9n767.1
+
+Third-party software used:
+  - FEniCS/dolfinx (LGPL-3.0): https://fenicsproject.org/
+  - PETSc (BSD-2-Clause): https://petsc.org/
+  - PyMC (Apache-2.0): https://www.pymc.io/
+  - SALib (MIT): https://salib.readthedocs.io/
+  - PyVista (MIT): https://pyvista.org/
+  - NumPy, SciPy, pandas, matplotlib (BSD): https://scipy.org/
+  - Numba (BSD): https://numba.pydata.org/
+  - Snakemake (MIT): https://snakemake.github.io/

@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
+# Production / standard usage compose file.
+# Mount your data, config, and results directories before running.
+#
+# Usage:
+#   docker compose up
+#
+# The container runs the full Snakemake pipeline defined in config.yaml.
+# Override DATA_DIR, RESULTS_DIR, CONFIG_DIR if your paths differ.
+
+version: "3.9"
+
+services:
+  tumorfits:
+    image: ghcr.io/bibymaths/cna-resistdynamics:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint:
+      [
+        "conda",
+        "run",
+        "--no-capture-output",
+        "-n",
+        "cna-resist-dynamics",
+        "snakemake",
+      ]
+    command:
+      - "--cores"
+      - "all"
+      - "--configfile"
+      - "/config/config.yaml"
+    volumes:
+      - "${DATA_DIR:-./data}:/data:ro"
+      - "${RESULTS_DIR:-./results}:/results"
+      - "${CONFIG_DIR:-.}:/config:ro"
+    working_dir: /workspace
+    environment:
+      - OMP_NUM_THREADS=1
+      - MKL_NUM_THREADS=1

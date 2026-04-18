@@ -1,0 +1,9 @@
+/* Hide page title in hero-style pages */
+.md-content .md-typeset h1:first-child {
+  display: none;
+}
+
+/* Wider content on large screens */
+.md-grid {
+  max-width: 1400px;
+}

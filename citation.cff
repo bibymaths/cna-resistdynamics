@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "CNA-ResistDynamics"
+abstract: >
+  ODE and PDE dynamical models for inferring the temporal evolution of
+  chemotherapy resistance in ovarian cancer from longitudinal liquidCNA
+  subclonal fraction measurements and CA125 tumour burden.
+version: "0.1.0"
+date-released: "2025-01-01"
+license: MIT
+repository-code: "https://github.com/bibymaths/cna-resistdynamics"
+authors:
+  - family-names: Mishra
+    given-names: Abhinav
+    email: mishraabhinav@gmail.com
+keywords:
+  - cancer
+  - chemotherapy resistance
+  - ovarian cancer
+  - copy number alterations
+  - liquidCNA
+  - ODE
+  - PDE
+  - reaction-diffusion
+  - computational biology
+references:
+  - type: article
+    title: >
+      Subclonal copy-number alterations drive resistance to platinum-based
+      chemotherapy in ovarian cancer
+    authors:
+      - family-names: Hockings
+        given-names: Hannah
+    journal: Cancer Research
+    year: 2025
+    doi: 10.1158/0008-5472.CAN-25-0351
