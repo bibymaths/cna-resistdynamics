@@ -1,7 +1,8 @@
 <img src="assets/logo.svg" alt="CNA-ResistDynamics" width="140" />
 
-![Tests](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/tests.yml/badge.svg)]
-![Docs](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/docs.yml/badge.svg)]
+[![Lint](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/lint.yml/badge.svg)](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/lint.yml)
+[![Tests](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/tests.yml/badge.svg)](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/tests.yml)
+[![Deploy Docs](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/docs.yml/badge.svg)](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/docs.yml)
 ![Python 3.11](https://img.shields.io/badge/python-3.11-blue)]
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
