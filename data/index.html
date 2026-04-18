@@ -1,0 +1,1465 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="ODE → PDE dynamical modelling of chemotherapy resistance from liquidCNA measurements in ovarian cancer.">
+      
+      
+        <meta name="author" content="Abhinav Mishra">
+      
+      
+        <link rel="canonical" href="https://bibymaths.github.io/cna-resistdynamics/data/">
+      
+      
+        <link rel="prev" href="../model/">
+      
+      
+        <link rel="next" href="../cli/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Data - CNA-ResistDynamics</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Ubuntu:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Ubuntu";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#data" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="CNA-ResistDynamics" class="md-header__button md-logo" aria-label="CNA-ResistDynamics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            CNA-ResistDynamics
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Data
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bibymaths/cna-resistdynamics" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bibymaths/cna-resistdynamics
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="CNA-ResistDynamics" class="md-nav__button md-logo" aria-label="CNA-ResistDynamics" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    CNA-ResistDynamics
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bibymaths/cna-resistdynamics" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bibymaths/cna-resistdynamics
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mathematical Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cohort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cohort
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raw-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw inputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Raw inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ov_patientdna_samplelisttxt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OV_patientDNA_sampleList.txt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cna_tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CNA_tables/
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#liquidcna_results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        liquidCNA_results/
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#processed-data-datapatient_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Processed data: data/patient_data/
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow-within-tumorfits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data flow within tumorfits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapting-for-a-different-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adapting for a different dataset
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Adapting for a different dataset">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#another-patient-cohort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Another patient cohort
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#another-cancer-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Another cancer type
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cohort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cohort
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raw-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw inputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Raw inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ov_patientdna_samplelisttxt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OV_patientDNA_sampleList.txt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cna_tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CNA_tables/
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#liquidcna_results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        liquidCNA_results/
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#processed-data-datapatient_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Processed data: data/patient_data/
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow-within-tumorfits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data flow within tumorfits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapting-for-a-different-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adapting for a different dataset
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Adapting for a different dataset">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#another-patient-cohort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Another patient cohort
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#another-cancer-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Another cancer type
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="data">Data<a class="headerlink" href="#data" title="Permanent link">&para;</a></h1>
+<p>This document describes the data directory structure, file formats, and how to
+prepare equivalent data for a different cohort.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>data/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── ReadMe.txt                               # Brief dataset description
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── OV_patientDNA_sampleList.txt             # QC metadata table
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── CNA_tables/                              # QDNAseq copy-number archives
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   ├── Copynumber_tables_UP0018.combined.500.RData
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   ├── Copynumber_tables_UP0042.combined.500.RData
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│   ├── Copynumber_tables_UP0053.combined.500.RData
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│   ├── Copynumber_tables_UP0055.combined.500.RData
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   └── Copynumber_tables_UP0056.combined.500.RData
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>├── liquidCNA_results/                       # liquidCNA algorithm outputs
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│   ├── Estimates_OV_UP0018.vR.filtered.500.RData
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│   ├── Estimates_OV_UP0042.vR.filtered.500.RData
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│   ├── Estimates_OV_UP0053.vR.filtered.500.RData
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│   ├── Estimates_OV_UP0055.vR.filtered.500.RData
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│   ├── Estimates_OV_UP0056.vR.filtered.500.RData
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│   ├── Subclonal_ratio_estimates.extended.txt   ← main pipeline input
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>│   └── Drivers_subclonalCNA.txt
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>└── patient_data/                            # Extracted CSVs (generated)
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    ├── UP0018/  (9 CSV files)
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    ├── UP0042/  (9 CSV files)
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    ├── UP0053/  (9 CSV files)
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    ├── UP0055/  (9 CSV files)
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    └── UP0056/  (9 CSV files)
+</span></code></pre></div>
+<hr />
+<h2 id="cohort">Cohort<a class="headerlink" href="#cohort" title="Permanent link">&para;</a></h2>
+<p>Five ovarian cancer patients: <strong>UP0018, UP0042, UP0053, UP0055, UP0056</strong>.</p>
+<p>Data source: Hockings et al. (2025) <em>Cancer Research</em>,
+DOI <a href="https://doi.org/10.1158/0008-5472.CAN-25-0351">10.1158/0008-5472.CAN-25-0351</a>.</p>
+<p>Mendeley dataset: <a href="https://doi.org/10.17632/m93sk9n767.1">10.17632/m93sk9n767.1</a></p>
+<hr />
+<h2 id="raw-inputs">Raw inputs<a class="headerlink" href="#raw-inputs" title="Permanent link">&para;</a></h2>
+<h3 id="ov_patientdna_samplelisttxt">OV_patientDNA_sampleList.txt<a class="headerlink" href="#ov_patientdna_samplelisttxt" title="Permanent link">&para;</a></h3>
+<p>Tab-separated QC metadata for all sequenced samples.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SampleName</code></td>
+<td>Unique sample identifier (e.g. <code>UP0018_CTRL</code>)</td>
+</tr>
+<tr>
+<td><code>SampleType</code></td>
+<td><code>WBC</code> (germline control) or plasma/tumour type</td>
+</tr>
+<tr>
+<td><code>Patient</code></td>
+<td>Patient ID (e.g. <code>UP0018</code>)</td>
+</tr>
+<tr>
+<td><code>Context</code></td>
+<td>Clinical context (e.g. <code>Normal control</code>, <code>1st relapse (cfDNA)</code>)</td>
+</tr>
+<tr>
+<td><code>DetectedCNA</code></td>
+<td>Whether a subclonal CNA was detected (<code>TRUE</code>/<code>FALSE</code>)</td>
+</tr>
+<tr>
+<td><code>DetectedInPatient</code></td>
+<td>Whether CNA was detected in at least one sample for this patient</td>
+</tr>
+<tr>
+<td><code>Qubit</code></td>
+<td>DNA concentration (ng/µL); <code>NA</code> if not measured</td>
+</tr>
+<tr>
+<td><code>Failed</code></td>
+<td>Whether sample failed QC (<code>TRUE</code>/<code>FALSE</code>)</td>
+</tr>
+<tr>
+<td><code>PanelSequenced</code></td>
+<td>Whether sample was also sequenced with a targeted panel</td>
+</tr>
+<tr>
+<td><code>Date</code></td>
+<td>Sample date (if available)</td>
+</tr>
+<tr>
+<td><code>Time</code></td>
+<td>Days from diagnosis to sample collection</td>
+</tr>
+<tr>
+<td><code>CA125_updated</code></td>
+<td>Revised CA125 value if a measurement error was corrected; <code>NA</code> otherwise</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cna_tables">CNA_tables/<a class="headerlink" href="#cna_tables" title="Permanent link">&para;</a></h3>
+<p>Each <code>.RData</code> file contains three R <code>data.frame</code> objects produced by
+<a href="https://bioconductor.org/packages/QDNAseq/">QDNAseq</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Object</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bins.df</code></td>
+<td>Genomic bin definitions (chromosome, start, end, GC content, mappability)</td>
+</tr>
+<tr>
+<td><code>cn.df</code></td>
+<td>Per-bin copy-number values normalised to diploid baseline (1 = diploid)</td>
+</tr>
+<tr>
+<td><code>seg.df</code></td>
+<td>CBS-segmented copy-number calls per genomic segment</td>
+</tr>
+</tbody>
+</table>
+<p>These are intermediate products used by liquidCNA.  The <code>tumorfits</code> pipeline
+does not consume them directly, but they are included for reproducibility and
+can be extracted to CSV via <code>tumorfits extract-data</code>.</p>
+<h3 id="liquidcna_results">liquidCNA_results/<a class="headerlink" href="#liquidcna_results" title="Permanent link">&para;</a></h3>
+<h4 id="estimates_ov_up00xxvrfiltered500rdata">Estimates_OV_UP00XX.vR.filtered.500.RData<a class="headerlink" href="#estimates_ov_up00xxvrfiltered500rdata" title="Permanent link">&para;</a></h4>
+<p>Per-patient output of the liquidCNA subclonal ratio estimation algorithm.
+Each <code>.RData</code> contains:</p>
+<table>
+<thead>
+<tr>
+<th>Object</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pHat.df</code></td>
+<td>Estimated purity values per sample</td>
+</tr>
+<tr>
+<td><code>seg.df.corr</code></td>
+<td>Purity-corrected segmented copy-number values</td>
+</tr>
+<tr>
+<td><code>seg.av.corr</code></td>
+<td>Per-segment averages of purity-corrected CN (post-filtering of short segments)</td>
+</tr>
+<tr>
+<td><code>seg.plot</code></td>
+<td>Purity-corrected delta-CN values with chromosomal coordinates and clonal/subclonal annotation</td>
+</tr>
+<tr>
+<td><code>fitInfo</code></td>
+<td>Internal fitting diagnostics from the liquidCNA subclonal-ordering step</td>
+</tr>
+<tr>
+<td><code>final.medians</code></td>
+<td>Final subclonal ratio estimates (one row per sample)</td>
+</tr>
+<tr>
+<td><code>cutOff</code></td>
+<td>Estimated threshold for clonal vs subclonal calls</td>
+</tr>
+</tbody>
+</table>
+<h4 id="subclonal_ratio_estimatesextendedtxt">Subclonal_ratio_estimates.extended.txt<a class="headerlink" href="#subclonal_ratio_estimatesextendedtxt" title="Permanent link">&para;</a></h4>
+<p><strong>This is the primary input to the <code>tumorfits</code> pipeline.</strong></p>
+<p>Tab-separated; one row per sample, multiple rows per patient.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>time</code></td>
+<td>Sample identifier (maps to <code>SampleName</code> in the sample list)</td>
+</tr>
+<tr>
+<td><code>context</code></td>
+<td>Clinical context string (e.g. <code>Diagnosis (Tumour)</code>, <code>1st relapse (cfDNA)</code>)</td>
+</tr>
+<tr>
+<td><code>Patient</code></td>
+<td>Patient ID</td>
+</tr>
+<tr>
+<td><code>relratio</code></td>
+<td>Relative ratio (0 = baseline/diagnosis, 1 = relapse reference)</td>
+</tr>
+<tr>
+<td><code>ratio</code></td>
+<td>Estimated subclonal CNA fraction (0–1); this is the primary modelled quantity</td>
+</tr>
+<tr>
+<td><code>ratio_min95</code></td>
+<td>Lower bound of 95% confidence interval for ratio</td>
+</tr>
+<tr>
+<td><code>ratio_max95</code></td>
+<td>Upper bound of 95% confidence interval for ratio</td>
+</tr>
+<tr>
+<td><code>Accept_estimate</code></td>
+<td>Quality flag: <code>yes</code>, <code>maybe</code>, or <code>no</code></td>
+</tr>
+<tr>
+<td><code>CA125</code></td>
+<td>CA125 serum measurement (U/mL) at this time point</td>
+</tr>
+<tr>
+<td><code>Slope_before</code></td>
+<td>CA125 slope before this sample (derived quantity)</td>
+</tr>
+<tr>
+<td><code>Slope_after</code></td>
+<td>CA125 slope after this sample</td>
+</tr>
+<tr>
+<td><code>MinCA125</code></td>
+<td>Minimum CA125 across the patient's trajectory</td>
+</tr>
+<tr>
+<td><code>MaxCA125</code></td>
+<td>Maximum CA125 across the patient's trajectory</td>
+</tr>
+<tr>
+<td><code>Time</code></td>
+<td>Days from diagnosis</td>
+</tr>
+<tr>
+<td><code>DiagCA125</code></td>
+<td>CA125 at diagnosis</td>
+</tr>
+<tr>
+<td><code>MaxTime</code></td>
+<td>Maximum follow-up time (days)</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>ratio</code> column is the observed resistant fraction used in the likelihood.
+Rows with <code>Accept_estimate = no</code> are excluded by default.</p>
+<h4 id="drivers_subclonalcnatxt">Drivers_subclonalCNA.txt<a class="headerlink" href="#drivers_subclonalcnatxt" title="Permanent link">&para;</a></h4>
+<p>Tab-separated table listing known driver genes located within subclonal CNA
+segments identified by liquidCNA.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GeneID</code></td>
+<td>Ensembl gene identifier</td>
+</tr>
+<tr>
+<td><code>Start</code>, <code>End</code></td>
+<td>Genomic coordinates</td>
+</tr>
+<tr>
+<td><code>Chrom</code></td>
+<td>Chromosome</td>
+</tr>
+<tr>
+<td><code>GeneName</code></td>
+<td>HGNC gene name</td>
+</tr>
+<tr>
+<td><code>Patient</code></td>
+<td>Patient ID</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="processed-data-datapatient_data">Processed data: data/patient_data/<a class="headerlink" href="#processed-data-datapatient_data" title="Permanent link">&para;</a></h2>
+<p>The <code>data/patient_data/</code> directory is generated by <code>tumorfits extract-data</code>.
+Each patient sub-directory contains nine CSV files extracted from the <code>.RData</code>
+archives:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Source object</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bins.df.csv</code></td>
+<td><code>CNA_tables</code></td>
+<td>Genomic bin definitions</td>
+</tr>
+<tr>
+<td><code>cn.df.csv</code></td>
+<td><code>CNA_tables</code></td>
+<td>Per-bin copy numbers</td>
+</tr>
+<tr>
+<td><code>seg.df.csv</code></td>
+<td><code>CNA_tables</code></td>
+<td>Segmented copy numbers</td>
+</tr>
+<tr>
+<td><code>pHat.df.csv</code></td>
+<td><code>liquidCNA_results</code></td>
+<td>Purity estimates</td>
+</tr>
+<tr>
+<td><code>seg.df.corr.csv</code></td>
+<td><code>liquidCNA_results</code></td>
+<td>Purity-corrected segments</td>
+</tr>
+<tr>
+<td><code>seg.av.corr.csv</code></td>
+<td><code>liquidCNA_results</code></td>
+<td>Averaged segment values</td>
+</tr>
+<tr>
+<td><code>seg.plot.csv</code></td>
+<td><code>liquidCNA_results</code></td>
+<td>Plot-ready delta-CN table</td>
+</tr>
+<tr>
+<td><code>final.medians.csv</code></td>
+<td><code>liquidCNA_results</code></td>
+<td>Subclonal ratio final estimates</td>
+</tr>
+<tr>
+<td><code>cutOff.csv</code></td>
+<td><code>liquidCNA_results</code></td>
+<td>Clonality threshold</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Index column</p>
+<p>All CSVs are written with <code>index=True</code>, so the first column is the R
+row-name (usually a genomic location or sample identifier).</p>
+</div>
+<hr />
+<h2 id="data-flow-within-tumorfits">Data flow within tumorfits<a class="headerlink" href="#data-flow-within-tumorfits" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart LR
+    A["Subclonal_ratio_estimates\n.extended.txt"]
+    B["OV_patientDNA\n_sampleList.txt"]
+    C["odeio.load_patient_data()"]
+    D["PatientData dataclass\n(t, ratio, se, ca125, context)"]
+    E["ODE / PDE fitting"]
+    A --&gt; C
+    B --&gt; C
+    C --&gt; D
+    D --&gt; E</code></pre>
+<p>The <code>load_patient_data()</code> function in <code>tumorfits.odeio</code>:
+1. Loads <code>Subclonal_ratio_estimates.extended.txt</code>
+2. Filters rows by <code>Accept_estimate</code> flag
+3. Optionally merges with <code>OV_patientDNA_sampleList.txt</code> for QC columns
+4. Applies optional QC filters (drop failed, require panel-sequenced, etc.)
+5. Rescales time (days → months if <code>time_unit="months"</code>)
+6. Returns a <code>PatientData</code> dataclass</p>
+<hr />
+<h2 id="adapting-for-a-different-dataset">Adapting for a different dataset<a class="headerlink" href="#adapting-for-a-different-dataset" title="Permanent link">&para;</a></h2>
+<h3 id="another-patient-cohort">Another patient cohort<a class="headerlink" href="#another-patient-cohort" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Produce an equivalent <code>Subclonal_ratio_estimates.extended.txt</code> with the
+   same column schema.  The minimum required columns are:</li>
+<li>
+<p><code>Patient</code>, <code>Time</code> (days), <code>ratio</code>, <code>ratio_min95</code>, <code>ratio_max95</code>,
+     <code>Accept_estimate</code>, <code>CA125</code>, <code>context</code></p>
+</li>
+<li>
+<p>Update <code>config.yaml</code>:
+   <div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">data</span><span class="p">:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">subclonal_ratios</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;path/to/your_estimates.txt&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">sample_list</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">   </span><span class="c1"># or path to equivalent QC table</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nt">cohort</span><span class="p">:</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">flags</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span></code></pre></div></p>
+</li>
+<li>
+<p>Run the pipeline:
+   <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>snakemake<span class="w"> </span>--cores<span class="w"> </span>all<span class="w"> </span>--configfile<span class="w"> </span>config.yaml
+</span></code></pre></div></p>
+</li>
+</ol>
+<h3 id="another-cancer-type">Another cancer type<a class="headerlink" href="#another-cancer-type" title="Permanent link">&para;</a></h3>
+<p>The models are generic population-dynamics ODE/PDE systems.  The only
+cancer-specific assumptions are:
+- CA125 as a tumour-burden proxy — replace with a relevant serum biomarker
+- The liquidCNA-derived subclonal fraction as the resistance proxy — replace
+  with any longitudinal measure of resistant subclone prevalence
+- Chemotherapy treatment contexts — update <code>context</code> values in your input table</p>
+<p>Adjust the observation model parameters (<code>gamma</code>, <code>ca0</code>, <code>sigma_ca</code>) in
+<code>config.yaml</code> or via CLI flags if your biomarker has different scaling.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../model/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Mathematical Model">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Mathematical Model
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../cli/" class="md-footer__link md-footer__link--next" aria-label="Next: CLI Reference">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                CLI Reference
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 <a href="https://bibymaths.github.io">Abhinav Mishra</a>.
+
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bibymaths" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.indexes", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+      
+    
+  </body>
+</html>
