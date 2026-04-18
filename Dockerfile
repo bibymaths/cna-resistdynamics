@@ -18,8 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # --- Create conda environment ---
 WORKDIR /opt/tumorfits
 COPY environment.yml .
-RUN mamba env create -f environment.yml --solver=classic && \
-    mamba clean --all -y
+RUN conda env create -f environment.yml && \
+    conda clean --all -y
 
 # Activate the environment for all subsequent RUN/CMD/ENTRYPOINT
 SHELL ["conda", "run", "-n", "cna-resist-dynamics", "/bin/bash", "-c"]

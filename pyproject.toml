@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tumorfits"
-version = "0.9.2"
+version = "0.9.3"
 description = "ODE → PDE dynamical modelling of chemotherapy resistance from liquidCNA measurements"
 readme = "README.md"
 license = { text = "MIT" }
