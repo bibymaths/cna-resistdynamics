@@ -58,6 +58,12 @@ pde:
 # ─── Heatmap ──────────────────────────────────────────────────────────────────
 heatmap:
   out_dir: "results/heatmaps"
+  patients:
+    - "UP0018"
+    - "UP0042"
+    - "UP0053"
+    - "UP0055"
+    - "UP0056"
   n_cells: 100
   L: 1.0
   dt: 0.001

@@ -171,7 +171,7 @@ rule heatmaps:
         "logs/heatmaps.log"
     params:
         h = config["heatmap"],
-        patients = ["UP0018", "UP0042", "UP0053", "UP0055", "UP0056"],
+        patients = config["heatmap"].get("patients", ["UP0018", "UP0042", "UP0053", "UP0055", "UP0056"]),
     run:
         import os
         os.makedirs(output[0], exist_ok=True)
