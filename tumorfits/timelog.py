@@ -7,21 +7,44 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 
+from rich.console import Console
+from rich.logging import RichHandler
+from rich.traceback import install
+
+# Enable rich tracebacks globally
+install(show_locals=False)
+
+# Shared console (prevents multiple instances)
+_console = Console()
+
 
 def get_logger(name: str = "tumorfit", level: int = logging.INFO) -> logging.Logger:
     logger = logging.getLogger(name)
+
+    # Avoid duplicate handlers
     if logger.handlers:
         return logger
+
     logger.setLevel(level)
 
-    h = logging.StreamHandler()
-    fmt = logging.Formatter(
-        fmt="%(asctime)s [pid=%(process)d] %(levelname)s %(name)s: %(message)s",
-        datefmt="%H:%M:%S",
+    handler = RichHandler(
+        console=_console,
+        rich_tracebacks=True,
+        show_time=True,
+        show_level=True,
+        show_path=False,  # cleaner; set True if you want file:line
+        markup=True,
     )
-    h.setFormatter(fmt)
-    logger.addHandler(h)
+
+    formatter = logging.Formatter(
+        fmt="%(message)s",  # Rich handles time/level formatting
+        datefmt="[%H:%M:%S]",
+    )
+    handler.setFormatter(formatter)
+
+    logger.addHandler(handler)
     logger.propagate = False
+
     return logger
 
 
