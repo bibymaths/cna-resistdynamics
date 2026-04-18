@@ -34,7 +34,8 @@ dependencies = [
     "pyreadr>=0.5",
     "tqdm",
     "PyYAML>=6.0",
-    "snakemake"
+    "snakemake",
+    "rich"
 ]
 
 [project.optional-dependencies]
