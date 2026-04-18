@@ -1,15 +1,18 @@
 # SPDX-FileCopyrightText: 2025 Abhinav Mishra
 # SPDX-License-Identifier: MIT
 """Tests for tumorfits.dataio."""
-import pandas as pd
-import pytest
 
 from tumorfits.dataio import PATIENT_ID_PATTERN, export_all_patient_data
 
 
 def test_patient_id_pattern():
-    assert PATIENT_ID_PATTERN.search("Copynumber_tables_UP0018.combined.500.RData").group(0) == "UP0018"
-    assert PATIENT_ID_PATTERN.search("Estimates_OV_UP0056.vR.filtered.500.RData").group(0) == "UP0056"
+    assert (
+        PATIENT_ID_PATTERN.search("Copynumber_tables_UP0018.combined.500.RData").group(0)
+        == "UP0018"
+    )
+    assert (
+        PATIENT_ID_PATTERN.search("Estimates_OV_UP0056.vR.filtered.500.RData").group(0) == "UP0056"
+    )
     assert PATIENT_ID_PATTERN.search("no_patient_here.RData") is None
 
 

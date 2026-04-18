@@ -15,14 +15,14 @@ from .utils import ensure_dir
 
 
 def run_pde_heatmap(
-        *,
-        data_path: str,
-        ode_points_csv: str,
-        patient: str,
-        cfg: PDEConfig,
-        out_dir: str = "results_pde_model",
-        time_unit: str = "months",
-        sample_list: str | None = None,
+    *,
+    data_path: str,
+    ode_points_csv: str,
+    patient: str,
+    cfg: PDEConfig,
+    out_dir: str = "results_pde_model",
+    time_unit: str = "months",
+    sample_list: str | None = None,
 ):
     out_dir = ensure_dir(out_dir)
     data = load_patient_data(data_path, patient, time_unit=time_unit, sample_list_path=sample_list)

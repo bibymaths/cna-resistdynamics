@@ -13,10 +13,10 @@ from joblib import Parallel, delayed
 from .metrics import gof_metrics, nll_ratio_ca
 from .odefit import multistart_minimize
 from .odeio import PatientData, get_patients_with_flag, load_patient_data
-from .odemodel import simulate_ode, ode_theta_names
-from .odeplotio import save_patient_states_plots, plot_gof_scatter_all
+from .odemodel import ode_theta_names, simulate_ode
+from .odeplotio import plot_gof_scatter_all, save_patient_states_plots
 from .timelog import get_logger
-from .utils import invlogit, logit, ensure_dir
+from .utils import ensure_dir, invlogit, logit
 
 
 @dataclass
@@ -87,7 +87,7 @@ def fit_ode(data: PatientData, cfg: ODEFitConfig) -> tuple[np.ndarray, dict]:
         bounds=bnds,
         n_starts=cfg.n_starts,
         rel_noise=cfg.rel_noise,
-        seed=hash(data.patient) % (2 ** 32),
+        seed=hash(data.patient) % (2**32),
         method="L-BFGS-B",
         maxiter=cfg.maxiter,
         n_jobs_starts=cfg.n_jobs_starts,
@@ -96,30 +96,33 @@ def fit_ode(data: PatientData, cfg: ODEFitConfig) -> tuple[np.ndarray, dict]:
 
     theta = res.x
     C = len(data.context_names)
-    u_ctx = invlogit(theta[10:10 + C])
+    u_ctx = invlogit(theta[10 : 10 + C])
     logger.info(f"{data.patient}: u_ctx min={u_ctx.min():.3g} max={u_ctx.max():.3g}")
 
     r_hat, logca_hat = simulate_ode(data, theta)
-    metrics = gof_metrics(data.ratio, r_hat, data.log_ca125, logca_hat, nll=float(res.fun), k_params=int(theta.size))
+    metrics = gof_metrics(
+        data.ratio, r_hat, data.log_ca125, logca_hat, nll=float(res.fun), k_params=int(theta.size)
+    )
     out = {"success": bool(res.success), "message": res.message, "metrics": metrics}
     return theta, out
 
 
 def fit_and_collect_points(
-        patient_id: str,
-        *,
-        data_path: str,
-        time_unit: str,
-        sample_list: str | None,
-        use_ca125_updated: bool,
-        drop_failed: bool,
-        require_panel_sequenced: bool,
-        require_detected_cna: bool,
-        cfg: ODEFitConfig,
-        diag_dir: str | None = None,
+    patient_id: str,
+    *,
+    data_path: str,
+    time_unit: str,
+    sample_list: str | None,
+    use_ca125_updated: bool,
+    drop_failed: bool,
+    require_panel_sequenced: bool,
+    require_detected_cna: bool,
+    cfg: ODEFitConfig,
+    diag_dir: str | None = None,
 ) -> list[dict]:
     data = load_patient_data(
-        data_path, patient_id,
+        data_path,
+        patient_id,
         time_unit=time_unit,
         sample_list_path=sample_list,
         use_ca125_updated=use_ca125_updated,
@@ -147,15 +150,17 @@ def fit_and_collect_points(
 
     # store theta rows (long format)
     for name, val in zip(ode_theta_names(data.context_names), theta):
-        rows.append({
-            "patient": patient_id,
-            "time": np.nan,
-            "model": "ODE",
-            "var": f"theta:{name}",
-            "obs": np.nan,
-            "pred": float(val),
-            "flag_out95": False,
-        })
+        rows.append(
+            {
+                "patient": patient_id,
+                "time": np.nan,
+                "model": "ODE",
+                "var": f"theta:{name}",
+                "obs": np.nan,
+                "pred": float(val),
+                "flag_out95": False,
+            }
+        )
 
     # per-timepoint obs/pred rows
     r_hat, logca_hat = simulate_ode(data, theta)
@@ -163,47 +168,52 @@ def fit_and_collect_points(
 
     # out-of-95% flags
     from .utils import logit as _logit  # local to avoid circular
+
     y_obs = _logit(data.ratio)
     y_hat = _logit(r_hat)
     out_ratio = np.abs(y_obs - y_hat) > (1.96 * data.se_logit_ratio)
     out_ca = np.abs(data.log_ca125 - logca_hat) > (1.96 * sigma_ca)
 
     for i, t in enumerate(data.t):
-        rows.append({
-            "patient": patient_id,
-            "time": float(t),
-            "model": "ODE",
-            "var": "ratio",
-            "obs": float(data.ratio[i]),
-            "pred": float(r_hat[i]),
-            "flag_out95": bool(out_ratio[i]),
-        })
-        rows.append({
-            "patient": patient_id,
-            "time": float(t),
-            "model": "ODE",
-            "var": "logCA125",
-            "obs": float(data.log_ca125[i]),
-            "pred": float(logca_hat[i]),
-            "flag_out95": bool(out_ca[i]),
-        })
+        rows.append(
+            {
+                "patient": patient_id,
+                "time": float(t),
+                "model": "ODE",
+                "var": "ratio",
+                "obs": float(data.ratio[i]),
+                "pred": float(r_hat[i]),
+                "flag_out95": bool(out_ratio[i]),
+            }
+        )
+        rows.append(
+            {
+                "patient": patient_id,
+                "time": float(t),
+                "model": "ODE",
+                "var": "logCA125",
+                "obs": float(data.log_ca125[i]),
+                "pred": float(logca_hat[i]),
+                "flag_out95": bool(out_ca[i]),
+            }
+        )
 
     return rows
 
 
 def fit_ode_cohort(
-        *,
-        data_path: str,
-        flags: list[str],
-        time_unit: str = "months",
-        sample_list: str | None = None,
-        use_ca125_updated: bool = False,
-        drop_failed: bool = False,
-        require_panel_sequenced: bool = False,
-        require_detected_cna: bool = False,
-        cfg: ODEFitConfig = ODEFitConfig(),
-        out_points_csv: str = "ode_gof_points.csv",
-        diag_dir: str | None = None,
+    *,
+    data_path: str,
+    flags: list[str],
+    time_unit: str = "months",
+    sample_list: str | None = None,
+    use_ca125_updated: bool = False,
+    drop_failed: bool = False,
+    require_panel_sequenced: bool = False,
+    require_detected_cna: bool = False,
+    cfg: ODEFitConfig = ODEFitConfig(),
+    out_points_csv: str = "ode_gof_points.csv",
+    diag_dir: str | None = None,
 ) -> pd.DataFrame:
     logger = get_logger("tumorfit.ode.cohort")
     patients = get_patients_with_flag(data_path, flags=flags)
@@ -231,23 +241,25 @@ def fit_ode_cohort(
     rows = [r for group in nested for r in group]
     df = pd.DataFrame(rows)
     df.to_csv(out_points_csv, index=False)
-    logger.info(f"Saved ODE points: {out_points_csv} rows={len(df)} patients={df['patient'].nunique()}")
+    logger.info(
+        f"Saved ODE points: {out_points_csv} rows={len(df)} patients={df['patient'].nunique()}"
+    )
     return df
 
 
 def fit_ode_single(
-        *,
-        data_path: str,
-        patient: str,
-        time_unit: str = "months",
-        sample_list: str | None = None,
-        use_ca125_updated: bool = False,
-        drop_failed: bool = False,
-        require_panel_sequenced: bool = False,
-        require_detected_cna: bool = False,
-        cfg: ODEFitConfig = ODEFitConfig(),
-        out_points_csv: str = "ode_points_single.csv",
-        diag_dir: str | None = None,
+    *,
+    data_path: str,
+    patient: str,
+    time_unit: str = "months",
+    sample_list: str | None = None,
+    use_ca125_updated: bool = False,
+    drop_failed: bool = False,
+    require_panel_sequenced: bool = False,
+    require_detected_cna: bool = False,
+    cfg: ODEFitConfig = ODEFitConfig(),
+    out_points_csv: str = "ode_points_single.csv",
+    diag_dir: str | None = None,
 ) -> pd.DataFrame:
     if diag_dir:
         diag_dir = ensure_dir(diag_dir)

@@ -32,23 +32,37 @@ def plot_pde_fit(df_traj: pd.DataFrame, out_path: str, *, title: str = "") -> st
     return out_path
 
 
-def plot_heatmaps(x: np.ndarray, t: np.ndarray, S_mat: np.ndarray, R_mat: np.ndarray, out_path: str, *,
-                  title: str = "") -> str:
+def plot_heatmaps(
+    x: np.ndarray,
+    t: np.ndarray,
+    S_mat: np.ndarray,
+    R_mat: np.ndarray,
+    out_path: str,
+    *,
+    title: str = "",
+) -> str:
     ensure_dir(os.path.dirname(out_path) or ".")
     total = S_mat + R_mat
     frac = np.divide(R_mat, total, out=np.zeros_like(R_mat), where=total > 1e-9)
 
     fig, ax = plt.subplots(1, 2, figsize=(14, 6))
 
-    im1 = ax[0].imshow(total, aspect="auto", origin="lower",
-                       extent=[x.min(), x.max(), t.min(), t.max()])
+    im1 = ax[0].imshow(
+        total, aspect="auto", origin="lower", extent=[x.min(), x.max(), t.min(), t.max()]
+    )
     ax[0].set_title(title + " Total density" if title else "Total density")
     ax[0].set_xlabel("Space (x)")
     ax[0].set_ylabel("Time")
     fig.colorbar(im1, ax=ax[0], label="Cell density")
 
-    im2 = ax[1].imshow(frac, aspect="auto", origin="lower",
-                       extent=[x.min(), x.max(), t.min(), t.max()], vmin=0, vmax=1)
+    im2 = ax[1].imshow(
+        frac,
+        aspect="auto",
+        origin="lower",
+        extent=[x.min(), x.max(), t.min(), t.max()],
+        vmin=0,
+        vmax=1,
+    )
     ax[1].set_title(title + " Resistant fraction" if title else "Resistant fraction")
     ax[1].set_xlabel("Space (x)")
     fig.colorbar(im2, ax=ax[1], label="R/(S+R)")

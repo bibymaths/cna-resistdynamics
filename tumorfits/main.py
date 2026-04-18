@@ -6,12 +6,12 @@ import argparse
 import os
 
 from .odeplotio import plot_gof_scatter_all
-from .oderunner import fit_ode_cohort, ODEFitConfig
+from .oderunner import ODEFitConfig, fit_ode_cohort
 from .pdemodel import PDEConfig
 from .pderunner import run_pde_for_patient
 from .simpde import run_pde_heatmap
 from .timelog import get_logger
-from .utils import set_thread_env, as_list, ensure_dir
+from .utils import as_list, ensure_dir, set_thread_env
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -41,7 +41,9 @@ def build_parser() -> argparse.ArgumentParser:
     ode.add_argument("--scatter_prefix", default="gof")
 
     # PDE single patient
-    pde = sub.add_parser("pde", help="Run PDE for a patient (optionally fit) using ODE params as start")
+    pde = sub.add_parser(
+        "pde", help="Run PDE for a patient (optionally fit) using ODE params as start"
+    )
     pde.add_argument("--data", required=True)
     pde.add_argument("--ode_points", required=True)
     pde.add_argument("--patient", required=True)
@@ -72,7 +74,9 @@ def build_parser() -> argparse.ArgumentParser:
     pde.add_argument("--n_jobs_starts", type=int, default=-1)
 
     # Heatmap
-    hm = sub.add_parser("heatmap", help="Generate PDE heatmap for a patient (no fit; uses ODE params)")
+    hm = sub.add_parser(
+        "heatmap", help="Generate PDE heatmap for a patient (no fit; uses ODE params)"
+    )
     hm.add_argument("--data", required=True)
     hm.add_argument("--ode_points", required=True)
     hm.add_argument("--patient", required=True)
@@ -136,11 +140,18 @@ def main():
 
     if args.cmd == "pde":
         cfg = PDEConfig(
-            L=args.L, n_cells=args.n_cells, dt=args.dt,
-            DS=args.DS, DR=args.DR,
-            gamma=args.gamma, ca0=args.ca0,
-            sigma_ca=args.sigma_ca, w_ca=args.w_ca,
-            maxiter=args.maxiter, n_starts=args.n_starts, n_jobs_starts=args.n_jobs_starts
+            L=args.L,
+            n_cells=args.n_cells,
+            dt=args.dt,
+            DS=args.DS,
+            DR=args.DR,
+            gamma=args.gamma,
+            ca0=args.ca0,
+            sigma_ca=args.sigma_ca,
+            w_ca=args.w_ca,
+            maxiter=args.maxiter,
+            n_starts=args.n_starts,
+            n_jobs_starts=args.n_jobs_starts,
         )
         run_pde_for_patient(
             data_path=args.data,
@@ -161,10 +172,15 @@ def main():
 
     if args.cmd == "heatmap":
         cfg = PDEConfig(
-            L=args.L, n_cells=args.n_cells, dt=args.dt,
-            DS=args.DS, DR=args.DR,
-            gamma=args.gamma, ca0=args.ca0,
-            sigma_ca=args.sigma_ca, w_ca=args.w_ca,
+            L=args.L,
+            n_cells=args.n_cells,
+            dt=args.dt,
+            DS=args.DS,
+            DR=args.DR,
+            gamma=args.gamma,
+            ca0=args.ca0,
+            sigma_ca=args.sigma_ca,
+            w_ca=args.w_ca,
         )
         out = run_pde_heatmap(
             data_path=args.data,

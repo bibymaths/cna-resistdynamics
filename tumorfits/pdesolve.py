@@ -14,11 +14,13 @@ from .metrics import nll_ratio_ca
 from .odeio import PatientData
 from .pdemodel import PDEConfig, get_treatment_value
 
-
 # ----------------------------- numba kernels -----------------------------
 
+
 @njit(cache=True, fastmath=True, nogil=True)
-def _u_piecewise(tt: float, t_samples: np.ndarray, ctx_samples: np.ndarray, u_ctx: np.ndarray) -> float:
+def _u_piecewise(
+    tt: float, t_samples: np.ndarray, ctx_samples: np.ndarray, u_ctx: np.ndarray
+) -> float:
     lo = 0
     hi = t_samples.shape[0]
     while lo < hi:
@@ -118,6 +120,7 @@ def _observables_from_stacks(
 
 # ----------------------------- cached fenics system -----------------------------
 
+
 @dataclass
 class _PDECacheEntry:
     # core fenics objects
@@ -159,11 +162,11 @@ def _comm_key(comm: Any) -> int:
 
 def _get_or_build_system(comm: Any, cfg: PDEConfig, return_history: bool) -> _PDECacheEntry:
     # Local imports so non-PDE users don't need FEniCS installed.
+    import basix.ufl
+    import ufl
     from dolfinx import fem, mesh
     from dolfinx.fem import petsc as dx_petsc
     from petsc4py import PETSc
-    import ufl
-    import basix.ufl
 
     L = float(cfg.L)
     n_cells = int(cfg.n_cells)
@@ -211,8 +214,10 @@ def _get_or_build_system(comm: Any, cfg: PDEConfig, return_history: bool) -> _PD
     rhs_form_S = fem.form(L_S_form)
     rhs_form_R = fem.form(L_R_form)
 
-    A_S = dx_petsc.assemble_matrix(fem.form(a_S)); A_S.assemble()
-    A_R = dx_petsc.assemble_matrix(fem.form(a_R)); A_R.assemble()
+    A_S = dx_petsc.assemble_matrix(fem.form(a_S))
+    A_S.assemble()
+    A_R = dx_petsc.assemble_matrix(fem.form(a_R))
+    A_R.assemble()
 
     ksp_S = PETSc.KSP().create(domain.comm)
     ksp_S.setOperators(A_S)
@@ -237,19 +242,29 @@ def _get_or_build_system(comm: Any, cfg: PDEConfig, return_history: bool) -> _PD
         xgeom_sorted = xgeom[sorted_idx].copy()
 
     entry = _PDECacheEntry(
-        domain=domain, V=V,
-        S=S, R=R, S_prev=S_prev, R_prev=R_prev,
-        rhs_form_S=rhs_form_S, rhs_form_R=rhs_form_R,
-        A_S=A_S, A_R=A_R,
-        ksp_S=ksp_S, ksp_R=ksp_R,
-        b_S=b_S, b_R=b_R,
-        xgeom_sorted=xgeom_sorted, sorted_idx=sorted_idx,
+        domain=domain,
+        V=V,
+        S=S,
+        R=R,
+        S_prev=S_prev,
+        R_prev=R_prev,
+        rhs_form_S=rhs_form_S,
+        rhs_form_R=rhs_form_R,
+        A_S=A_S,
+        A_R=A_R,
+        ksp_S=ksp_S,
+        ksp_R=ksp_R,
+        b_S=b_S,
+        b_R=b_R,
+        xgeom_sorted=xgeom_sorted,
+        sorted_idx=sorted_idx,
     )
     _PDE_SYSTEM_CACHE[key] = entry
     return entry
 
 
 # ----------------------------- main solver (cached) -----------------------------
+
 
 def solve_pde(
     params: list[float] | np.ndarray,
@@ -263,8 +278,8 @@ def solve_pde(
     Same behavior as your current solve_pde(), but caches the FEniCS/PETSc system
     (mesh/V/matrices/KSP/vecs) across repeated objective evaluations.
     """
-    from mpi4py import MPI
     from dolfinx.fem import petsc as dx_petsc  # assembly helper
+    from mpi4py import MPI
 
     if comm is None:
         comm = MPI.COMM_SELF
@@ -285,8 +300,8 @@ def solve_pde(
     ratio0 = float(np.asarray(data.ratio, dtype=float)[0])
     ratio0 = float(np.clip(ratio0, 1e-9, 1.0 - 1e-9))
 
-    if hasattr(data, "ca125") and getattr(data, "ca125") is not None:
-        ca125_0 = float(np.asarray(getattr(data, "ca125"), dtype=float)[0])
+    if hasattr(data, "ca125") and data.ca125 is not None:
+        ca125_0 = float(np.asarray(data.ca125, dtype=float)[0])
     else:
         ca125_0 = float(np.exp(np.asarray(data.log_ca125, dtype=float)[0]))
 
@@ -322,6 +337,7 @@ def solve_pde(
     ctx_samples_arr = np.asarray(data.context, dtype=np.int64)
 
     if cfg.u_ctx is None:
+
         def u_val_at(tt: float) -> float:
             return float(get_treatment_value(tt))
     else:
@@ -366,11 +382,17 @@ def solve_pde(
         u_val = float(u_val_at(t_next))
 
         _reaction_step_inplace(
-            S.x.array, R.x.array,
+            S.x.array,
+            R.x.array,
             dt_step,
-            float(aS), float(aR), float(dS), float(dR), float(K),
+            float(aS),
+            float(aR),
+            float(dS),
+            float(dR),
+            float(K),
             u_val,
-            S_prev.x.array, R_prev.x.array,
+            S_prev.x.array,
+            R_prev.x.array,
         )
 
         # implicit diffusion using cached matrices + solvers + vecs

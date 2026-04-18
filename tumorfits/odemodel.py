@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
-from typing import Callable, Tuple, List
+from collections.abc import Callable
 
 import numpy as np
 from numba import njit
@@ -11,7 +11,7 @@ from scipy.integrate import solve_ivp
 from .odeio import PatientData
 from .utils import invlogit, safe_log
 
-ODE_THETA_BASE_NAMES: List[str] = [
+ODE_THETA_BASE_NAMES: list[str] = [
     "log_aS",
     "logit_aR_over_aS",
     "log_dS",
@@ -29,7 +29,9 @@ def ode_theta_names(context_names: list[str]) -> list[str]:
     return ODE_THETA_BASE_NAMES + [f"logit_u_ctx[{c}]" for c in context_names]
 
 
-def make_u_of_t(t_samples: np.ndarray, ctx_samples: np.ndarray, u_ctx: np.ndarray) -> Callable[[float], float]:
+def make_u_of_t(
+    t_samples: np.ndarray, ctx_samples: np.ndarray, u_ctx: np.ndarray
+) -> Callable[[float], float]:
     t_samples = np.asarray(t_samples, float)
     ctx_samples = np.asarray(ctx_samples, int)
     u_ctx = np.asarray(u_ctx, float)
@@ -45,9 +47,9 @@ def make_u_of_t(t_samples: np.ndarray, ctx_samples: np.ndarray, u_ctx: np.ndarra
 
 
 @njit(cache=True)
-def _ode_rhs_core(t: float, S: float, R: float,
-                  aS: float, aR: float, dS: float, dR: float, K: float,
-                  u: float) -> np.ndarray:
+def _ode_rhs_core(
+    t: float, S: float, R: float, aS: float, aR: float, dS: float, dR: float, K: float, u: float
+) -> np.ndarray:
     N = S + R
     g = 1.0 - N / K
     if g < 0.0:
@@ -63,10 +65,10 @@ def _ode_rhs_core(t: float, S: float, R: float,
 
 
 def ode_rhs(
-        t: float,
-        y: np.ndarray,
-        pars: tuple[float, float, float, float, float],
-        u_fun: Callable[[float], float],
+    t: float,
+    y: np.ndarray,
+    pars: tuple[float, float, float, float, float],
+    u_fun: Callable[[float], float],
 ):
     S, R = y
     aS, aR, dS, dR, K = pars
@@ -84,8 +86,19 @@ def unpack_theta_ode(data: PatientData, theta: np.ndarray):
     if theta.size != 10 + C:
         raise ValueError(f"theta size mismatch: got {theta.size}, expected {10 + C}")
 
-    log_aS, logit_aR_ratio, log_dS, logit_dR_ratio, log_K, log_N0, logit_r0, log_gamma, log_ca0, log_sigma = theta[:10]
-    logit_u = theta[10:10 + C]  # ✅ correct
+    (
+        log_aS,
+        logit_aR_ratio,
+        log_dS,
+        logit_dR_ratio,
+        log_K,
+        log_N0,
+        logit_r0,
+        log_gamma,
+        log_ca0,
+        log_sigma,
+    ) = theta[:10]
+    logit_u = theta[10 : 10 + C]  # ✅ correct
     u_ctx = invlogit(logit_u)
 
     aS = float(np.exp(log_aS))
@@ -105,7 +118,7 @@ def unpack_theta_ode(data: PatientData, theta: np.ndarray):
     return (aS, aR, dS, dR, K, S0, R0, gamma, ca0, sigma_ca, u_ctx)
 
 
-def simulate_ode(data: PatientData, theta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def simulate_ode(data: PatientData, theta: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     aS, aR, dS, dR, K, S0, R0, gamma, ca0, _sigma_ca, u_ctx = unpack_theta_ode(data, theta)
 
     u_fun = make_u_of_t(data.t, data.context, u_ctx)

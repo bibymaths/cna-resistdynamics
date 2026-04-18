@@ -1,10 +1,9 @@
 # SPDX-FileCopyrightText: 2025 Abhinav Mishra
 # SPDX-License-Identifier: MIT
 """Tests for the tumorfits CLI."""
+
 import subprocess
 import sys
-
-import pytest
 
 
 def run_cli(*args: str) -> subprocess.CompletedProcess:
@@ -54,10 +53,16 @@ def test_help_mesh_view():
 def test_extract_data_no_rdata(tmp_path):
     """extract-data on an empty directory should succeed with zero files."""
     result = subprocess.run(
-        [sys.executable, "-m", "tumorfits.cli",
-         "extract-data",
-         "--data-root", str(tmp_path),
-         "--out-dir", str(tmp_path / "patient_data")],
+        [
+            sys.executable,
+            "-m",
+            "tumorfits.cli",
+            "extract-data",
+            "--data-root",
+            str(tmp_path),
+            "--out-dir",
+            str(tmp_path / "patient_data"),
+        ],
         capture_output=True,
         text=True,
     )

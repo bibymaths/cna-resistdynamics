@@ -1,11 +1,10 @@
 # SPDX-FileCopyrightText: 2025 Abhinav Mishra
 # SPDX-License-Identifier: MIT
 """Tests for config.yaml structure and Snakemake integration."""
+
 from pathlib import Path
 
-import pytest
 import yaml
-
 
 CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
 SNAKEFILE_PATH = Path(__file__).parent.parent / "Snakefile"

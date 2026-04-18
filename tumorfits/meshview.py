@@ -27,10 +27,10 @@ Usage as library:
     from tumorfits.meshview import run_mesh_view_pipeline
     run_mesh_view_pipeline(patient_db, patient_data_map, out_dir="results_pde_model")
 """
+
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -44,6 +44,7 @@ _log = get_logger(__name__)
 # ---------------------------------------------------------------------------
 # Parameter loading helpers
 # ---------------------------------------------------------------------------
+
 
 def load_all_patient_params(csv_path: str) -> dict[str, dict[str, float]]:
     """
@@ -77,9 +78,9 @@ def load_all_patient_params(csv_path: str) -> dict[str, dict[str, float]]:
     for pid in df["patient"].unique():
         sub = df[df["patient"] == pid]
 
-        def _get(vname: str) -> float | None:
-            row = sub[sub["var"] == vname]
-            return float(row[val_col].values[0]) if not row.empty else None
+        def _get(vname: str, _sub: object = sub, _vc: str = val_col) -> float | None:
+            row = _sub[_sub["var"] == vname]  # type: ignore[index]
+            return float(row[_vc].values[0]) if not row.empty else None  # type: ignore[index]
 
         log_aS = _get("theta:log_aS")
         logit_aR = _get("theta:logit_aR_over_aS")
@@ -98,8 +99,13 @@ def load_all_patient_params(csv_path: str) -> dict[str, dict[str, float]]:
         K = float(np.exp(log_K))  # type: ignore[arg-type]
 
         params_dict[pid] = {
-            "aS": aS, "aR": aR, "dS": dS, "dR": dR, "K": K,
-            "DS": 0.01, "DR": 0.01,
+            "aS": aS,
+            "aR": aR,
+            "dS": dS,
+            "dR": dR,
+            "K": K,
+            "DS": 0.01,
+            "DR": 0.01,
         }
 
     return params_dict
@@ -108,6 +114,7 @@ def load_all_patient_params(csv_path: str) -> dict[str, dict[str, float]]:
 # ---------------------------------------------------------------------------
 # 2-D FEniCS simulation
 # ---------------------------------------------------------------------------
+
 
 def run_cancer_simulation_2d(
     params: dict[str, float],
@@ -155,12 +162,12 @@ def run_cancer_simulation_2d(
     -------
     (mesh, S_function, R_function)
     """
-    from mpi4py import MPI
-    import dolfinx
-    from dolfinx.fem import petsc as fem_petsc, Function, functionspace
-    from dolfinx.mesh import CellType, create_unit_square
-    import ufl
     import basix.ufl
+    import ufl
+    from dolfinx.fem import Function, functionspace
+    from dolfinx.fem import petsc as fem_petsc
+    from dolfinx.mesh import CellType, create_unit_square
+    from mpi4py import MPI
 
     comm = MPI.COMM_WORLD
     msh = create_unit_square(comm, nx, ny, CellType.quadrilateral)
@@ -235,6 +242,7 @@ def run_cancer_simulation_2d(
 # PyVista visualisation helpers
 # ---------------------------------------------------------------------------
 
+
 def plot_resistance_zones(
     msh: Any,
     S: Any,
@@ -281,8 +289,11 @@ def plot_resistance_zones(
     else:
         tumor_body = grid.threshold(max_dens * 0.01, scalars="Density")
         pl.add_mesh(
-            tumor_body, scalars="Resistant Fraction",
-            cmap="inferno", clim=[0, 1], show_scalar_bar=True,
+            tumor_body,
+            scalars="Resistant Fraction",
+            cmap="inferno",
+            clim=[0, 1],
+            show_scalar_bar=True,
         )
         pl.add_mesh(grid, style="wireframe", color="grey", opacity=0.1)
 
@@ -306,10 +317,11 @@ def plot_growth_streamlines(
     Saves ``<out_dir>/<pid>_streamlines.png``.
     """
     import dolfinx
+    import dolfinx.fem
     import pyvista as pv
 
     V = S.function_space
-    N_fn = Function(V)
+    N_fn = dolfinx.fem.Function(V)
     N_fn.x.array[:] = S.x.array[:] + R.x.array[:]
 
     cells, types, x = dolfinx.plot.vtk_mesh(V)
@@ -346,8 +358,10 @@ def plot_growth_streamlines(
             pl.add_mesh(stream.tube(radius=0.003), color="red")
 
         arrows = grad.glyph(
-            orient="gradient", scale="gradient",
-            factor=0.1, tolerance=0.01,
+            orient="gradient",
+            scale="gradient",
+            factor=0.1,
+            tolerance=0.01,
         )
         if arrows.n_points > 0:
             pl.add_mesh(arrows, color="blue", opacity=0.6)
@@ -389,8 +403,11 @@ def plot_drug_efficacy(
     grid["Vectors"] = vectors
 
     arrows = grid.glyph(
-        orient="Vectors", scale="Density",
-        geom=pv.Arrow(), factor=0.1, tolerance=0.02,
+        orient="Vectors",
+        scale="Density",
+        geom=pv.Arrow(),
+        factor=0.1,
+        tolerance=0.02,
     )
 
     pl = pv.Plotter(off_screen=True, window_size=[1024, 768])
@@ -409,6 +426,7 @@ def plot_drug_efficacy(
 # ---------------------------------------------------------------------------
 # High-level pipeline runner
 # ---------------------------------------------------------------------------
+
 
 def run_mesh_view_pipeline(
     patient_db: dict[str, dict[str, float]],

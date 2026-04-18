@@ -4,13 +4,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
+from .metrics import nll_ratio_ca
 from .odeio import PatientData
 from .odemodel import simulate_ode
-from .metrics import nll_ratio_ca
 
 
 @dataclass
@@ -19,6 +19,7 @@ class ODEBayesConfig:
     Bayesian config for ODE posterior.
     We use a black-box likelihood (as_op), so prefer SMC or Metropolis.
     """
+
     draws: int = 2000
     tune: int = 1000
     chains: int = 2
@@ -28,7 +29,7 @@ class ODEBayesConfig:
     random_seed: int = 0
 
 
-def _ode_theta_to_physical(theta: np.ndarray, n_ctx: int) -> Dict[str, Any]:
+def _ode_theta_to_physical(theta: np.ndarray, n_ctx: int) -> dict[str, Any]:
     """
     Helper: interpret theta into physical values (mostly for reporting).
     Theta layout must match your canonical ODE layout:
@@ -40,7 +41,18 @@ def _ode_theta_to_physical(theta: np.ndarray, n_ctx: int) -> Dict[str, Any]:
     theta = np.asarray(theta, float)
     assert theta.size == 10 + n_ctx
 
-    log_aS, logit_aR, log_dS, logit_dR, log_K, log_N0, logit_r0, log_gamma, log_ca0, log_sigma_ca = theta[:10]
+    (
+        log_aS,
+        logit_aR,
+        log_dS,
+        logit_dR,
+        log_K,
+        log_N0,
+        logit_r0,
+        log_gamma,
+        log_ca0,
+        log_sigma_ca,
+    ) = theta[:10]
     u_logits = theta[10:]
 
     aS = float(np.exp(log_aS))
@@ -197,7 +209,7 @@ def sample_ode_posterior(data: PatientData, cfg: ODEBayesConfig):
     return idata
 
 
-def summarize_ode_posterior(idata, data: PatientData) -> Dict[str, Any]:
+def summarize_ode_posterior(idata, data: PatientData) -> dict[str, Any]:
     """
     Convenience summary: posterior mean in physical space for reporting.
     """

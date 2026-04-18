@@ -13,6 +13,7 @@ pde           Run / fit the PDE reaction-diffusion model.
 heatmap       Generate PDE space-time heatmaps (no fitting required).
 mesh-view     Run 2-D FEniCS simulation and produce PyVista visualisations.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -156,10 +157,15 @@ def build_parser() -> argparse.ArgumentParser:
         from .simpde import run_pde_heatmap
 
         cfg = PDEConfig(
-            L=args.L, n_cells=args.n_cells, dt=args.dt,
-            DS=args.DS, DR=args.DR,
-            gamma=args.gamma, ca0=args.ca0,
-            sigma_ca=args.sigma_ca, w_ca=args.w_ca,
+            L=args.L,
+            n_cells=args.n_cells,
+            dt=args.dt,
+            DS=args.DS,
+            DR=args.DR,
+            gamma=args.gamma,
+            ca0=args.ca0,
+            sigma_ca=args.sigma_ca,
+            w_ca=args.w_ca,
         )
         out = run_pde_heatmap(
             data_path=args.data,
@@ -190,16 +196,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     mv.add_argument("--data", required=True, help="Subclonal_ratio_estimates.extended.txt")
     mv.add_argument(
-        "--ode-points", dest="ode_points", required=True,
+        "--ode-points",
+        dest="ode_points",
+        required=True,
         help="ODE long-table CSV from `tumorfits ode`",
     )
     mv.add_argument("--out-dir", dest="out_dir", default="results_pde_model")
     mv.add_argument(
-        "--patient", default="ALL",
+        "--patient",
+        default="ALL",
         help="Patient ID or ALL (default: ALL)",
     )
     mv.add_argument(
-        "--sample-list", dest="sample_list", default=None,
+        "--sample-list",
+        dest="sample_list",
+        default=None,
         help="Optional path to OV_patientDNA_sampleList.txt for QC filtering",
     )
     mv.add_argument("--time_unit", default="months", choices=["months", "days"])
@@ -226,7 +237,8 @@ def build_parser() -> argparse.ArgumentParser:
         for pid in patient_db:
             try:
                 patient_data_map[pid] = load_patient_data(
-                    args.data, pid,
+                    args.data,
+                    pid,
                     time_unit=args.time_unit,
                     sample_list_path=args.sample_list,
                     use_ca125_updated=args.use_ca125_updated,

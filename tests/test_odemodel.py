@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Abhinav Mishra
 # SPDX-License-Identifier: MIT
 """Regression tests for the ODE model."""
+
 import numpy as np
 import pytest
 
@@ -38,18 +39,20 @@ def _make_theta(n_ctx: int = 2) -> np.ndarray:
     """Build a valid theta vector (10 base + n_ctx context logits)."""
     # base: log_aS, logit_aR_ratio, log_dS, logit_dR_ratio, log_K,
     #       log_N0, logit_r0, log_gamma, log_ca0, log_sigma_ca
-    base = np.array([
-        safe_log(np.array([0.5]))[0],    # log_aS
-        logit(np.array([0.6]))[0],        # logit_aR_over_aS
-        safe_log(np.array([0.3]))[0],    # log_dS
-        logit(np.array([0.5]))[0],        # logit_dR_over_dS
-        safe_log(np.array([1e6]))[0],    # log_K
-        safe_log(np.array([1e4]))[0],    # log_N0
-        logit(np.array([0.1]))[0],        # logit_r0
-        safe_log(np.array([1e-4]))[0],   # log_gamma
-        safe_log(np.array([10.0]))[0],   # log_ca0
-        safe_log(np.array([0.1]))[0],    # log_sigma_ca
-    ])
+    base = np.array(
+        [
+            safe_log(np.array([0.5]))[0],  # log_aS
+            logit(np.array([0.6]))[0],  # logit_aR_over_aS
+            safe_log(np.array([0.3]))[0],  # log_dS
+            logit(np.array([0.5]))[0],  # logit_dR_over_dS
+            safe_log(np.array([1e6]))[0],  # log_K
+            safe_log(np.array([1e4]))[0],  # log_N0
+            logit(np.array([0.1]))[0],  # logit_r0
+            safe_log(np.array([1e-4]))[0],  # log_gamma
+            safe_log(np.array([10.0]))[0],  # log_ca0
+            safe_log(np.array([0.1]))[0],  # log_sigma_ca
+        ]
+    )
     ctx_logits = np.zeros(n_ctx)  # u_ctx ≈ 0.5 for all contexts
     return np.concatenate([base, ctx_logits])
 

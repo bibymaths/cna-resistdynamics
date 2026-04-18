@@ -1,9 +1,8 @@
 # SPDX-FileCopyrightText: 2025 Abhinav Mishra
 # SPDX-License-Identifier: MIT
 """Tests for tumorfits.utils."""
-import numpy as np
-import pytest
 
+import numpy as np
 from tumorfits.utils import (
     as_list,
     ci95_to_se_logit,
