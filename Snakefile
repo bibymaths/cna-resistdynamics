@@ -43,6 +43,7 @@ rule all:
         ODE_POINTS,
         directory(PDE_OUT),
         directory(HM_OUT),
+        directory(MV_OUT),
 
 
 # ── 1. Extract patient CSVs from .RData files ─────────────────────────────────
@@ -128,8 +129,20 @@ rule pde_run:
     log:
         "logs/pde_run.log"
     params:
-        p   = config["pde"],
-        fit = "--fit" if config["pde"].get("fit", False) else "",
+        fit        = "--fit" if config["pde"].get("fit", False) else "",
+        L          = config["pde"]["L"],
+        n_cells    = config["pde"]["n_cells"],
+        dt         = config["pde"]["dt"],
+        DS         = config["pde"]["DS"],
+        DR         = config["pde"]["DR"],
+        gamma      = config["pde"]["gamma"],
+        ca0        = config["pde"]["ca0"],
+        sigma_ca   = config["pde"]["sigma_ca"],
+        w_ca       = config["pde"]["w_ca"],
+        maxiter    = config["pde"]["maxiter"],
+        maxfev     = config["pde"]["maxfev"],
+        n_starts   = config["pde"]["n_starts"],
+        n_jobs_s   = config["pde"]["n_jobs_starts"],
     shell:
         """
         tumorfits pde \
@@ -139,19 +152,19 @@ rule pde_run:
             --sample_list {SAMPLE_LIST} \
             --patient     ALL \
             --out_dir     {output} \
-            --L           {params.p[L]} \
-            --n_cells     {params.p[n_cells]} \
-            --dt          {params.p[dt]} \
-            --DS          {params.p[DS]} \
-            --DR          {params.p[DR]} \
-            --gamma       {params.p[gamma]} \
-            --ca0         {params.p[ca0]} \
-            --sigma_ca    {params.p[sigma_ca]} \
-            --w_ca        {params.p[w_ca]} \
-            --maxiter     {params.p[maxiter]} \
-            --maxfev      {params.p[maxfev]} \
-            --n_starts    {params.p[n_starts]} \
-            --n_jobs_starts {params.p[n_jobs_starts]} \
+            --L           {params.L} \
+            --n_cells     {params.n_cells} \
+            --dt          {params.dt} \
+            --DS          {params.DS} \
+            --DR          {params.DR} \
+            --gamma       {params.gamma} \
+            --ca0         {params.ca0} \
+            --sigma_ca    {params.sigma_ca} \
+            --w_ca        {params.w_ca} \
+            --maxiter     {params.maxiter} \
+            --maxfev      {params.maxfev} \
+            --n_starts    {params.n_starts} \
+            --n_jobs_starts {params.n_jobs_s} \
             {params.fit} \
         2>&1 | tee {log}
         """
@@ -209,18 +222,21 @@ rule mesh_view:
     log:
         "logs/mesh_view.log"
     params:
-        mv = config["mesh_view"],
+        patient = config["mesh_view"]["patient"],
+        nx      = config["mesh_view"]["nx"],
+        ny      = config["mesh_view"]["ny"],
+        dt      = config["mesh_view"]["dt"],
     shell:
         """
         tumorfits mesh-view \
             --data        {input.data} \
             --ode-points  {input.ode_points} \
             --out-dir     {output} \
-            --patient     {params.mv[patient]} \
+            --patient     {params.patient} \
             --sample-list {SAMPLE_LIST} \
-            --nx          {params.mv[nx]} \
-            --ny          {params.mv[ny]} \
-            --dt          {params.mv[dt]} \
+            --nx          {params.nx} \
+            --ny          {params.ny} \
+            --dt          {params.dt} \
         2>&1 | tee {log}
         """
 
