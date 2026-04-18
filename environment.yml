@@ -479,8 +479,6 @@ dependencies:
       - tenacity==9.1.4
       - throttler==1.2.3
       - tqdm-joblib==0.0.5
-      - tumorfits==0.1.0
       - typing-inspection==0.4.2
       - wrapt==2.1.2
       - yte==1.9.4
-prefix: /home/abhinav/miniconda3/envs/cna-resist-dynamics
