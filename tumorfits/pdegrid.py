@@ -1,7 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
 # tumorfits/pdegrid.py
 from __future__ import annotations
-
-from typing import Tuple
 
 import numpy as np
 from numba import njit
@@ -49,13 +49,13 @@ def integrate_1d(vals: np.ndarray, dx: float) -> float:
 
 
 def pde_observables_from_grid(
-        S_vals: np.ndarray,
-        R_vals: np.ndarray,
-        dx: float,
-        *,
-        gamma: float = 1.0,
-        ca0: float = 0.0,
-) -> Tuple[float, float, float, float]:
+    S_vals: np.ndarray,
+    R_vals: np.ndarray,
+    dx: float,
+    *,
+    gamma: float = 1.0,
+    ca0: float = 0.0,
+) -> tuple[float, float, float, float]:
     """
     Same signature as your current code (keyword-only gamma/ca0).
     Returns (total_S, total_R, ratio_hat, logCA_hat).

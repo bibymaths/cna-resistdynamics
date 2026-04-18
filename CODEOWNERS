@@ -1,0 +1,19 @@
+# CODEOWNERS
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for all files
+*   @bibymaths
+
+# Python package
+tumorfits/   @bibymaths
+
+# Documentation
+docs/        @bibymaths
+mkdocs.yml   @bibymaths
+
+# Workflow
+Snakefile    @bibymaths
+config.yaml  @bibymaths
+
+# CI/CD
+.github/     @bibymaths

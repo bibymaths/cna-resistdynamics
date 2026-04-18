@@ -1,0 +1,83 @@
+# config.yaml — Single source of truth for the tumorfits Snakemake workflow.
+# Edit this file to adapt the pipeline to a different cohort or dataset.
+
+# ─── Paths ────────────────────────────────────────────────────────────────────
+data:
+  root: "data"
+  subclonal_ratios: "data/liquidCNA_results/Subclonal_ratio_estimates.extended.txt"
+  sample_list: "data/OV_patientDNA_sampleList.txt"
+  patient_data_dir: "data/patient_data"
+
+# ─── Patient / cohort selection ───────────────────────────────────────────────
+cohort:
+  # Accept_estimate flag(s) used to select patients; comma-separated string
+  flags: "yes,maybe"
+  # time unit for all clinical time variables
+  time_unit: "months"
+  # QC filters (set to true to activate)
+  use_ca125_updated: true
+  drop_failed: true
+  require_panel_sequenced: false
+  require_detected_cna: false
+
+# ─── ODE fitting ──────────────────────────────────────────────────────────────
+ode:
+  out_points: "results/ode_gof_points.csv"
+  diag_dir: "results/ode_diag"
+  n_starts: 8
+  rel_noise: 0.25
+  maxiter: 1200
+  w_ca: 0.5
+  n_jobs_patients: -1
+  n_jobs_starts: 1
+
+# ─── PDE model ────────────────────────────────────────────────────────────────
+pde:
+  out_dir: "results/pde"
+  # Spatial domain length (arbitrary units)
+  L: 1.0
+  # Number of finite-element cells in the 1-D domain
+  n_cells: 200
+  # Integration time step (same unit as time_unit)
+  dt: 0.001
+  # Diffusion coefficients for sensitive and resistant populations
+  DS: 0.01
+  DR: 0.01
+  # CA125 observation model parameters
+  gamma: 1.0
+  ca0: 0.0
+  sigma_ca: 0.5
+  w_ca: 1.0
+  # Fitting settings
+  fit: false
+  maxiter: 150
+  maxfev: 10000
+  n_starts: 10
+  n_jobs_starts: -1
+
+# ─── Heatmap ──────────────────────────────────────────────────────────────────
+heatmap:
+  out_dir: "results/heatmaps"
+  patients:
+    - "UP0018"
+    - "UP0042"
+    - "UP0053"
+    - "UP0055"
+    - "UP0056"
+  n_cells: 100
+  L: 1.0
+  dt: 0.001
+  DS: 0.01
+  DR: 0.01
+  gamma: 1.0
+  ca0: 0.0
+  sigma_ca: 0.5
+  w_ca: 1.0
+
+# ─── Mesh visualisation (2-D FEniCS + PyVista) ────────────────────────────────
+mesh_view:
+  out_dir: "results/mesh_view"
+  patient: "ALL"
+  nx: 50
+  ny: 50
+  dt: 0.5

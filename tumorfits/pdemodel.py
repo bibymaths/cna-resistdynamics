@@ -1,7 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 
@@ -22,7 +23,7 @@ class PDEConfig:
     ca0: float = 0.0
     sigma_ca: float = 0.5
     w_ca: float = 1.0
-    u_ctx: Optional[np.ndarray] = None
+    u_ctx: np.ndarray | None = None
 
     # fitting
     maxiter: int = 150

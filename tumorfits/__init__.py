@@ -1,9 +1,12 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
 """
 Package: ODE -> PDE tumor fitter.
 
 Run:
   python -m tumorfits.main --help
 """
+
 from __future__ import annotations
 
 __all__ = [

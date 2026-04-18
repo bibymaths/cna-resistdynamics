@@ -1,0 +1,42 @@
+{
+  "title": "CNA-ResistDynamics: Dynamical modelling of chemotherapy resistance from liquidCNA measurements",
+  "description": "ODE and PDE models for inferring the temporal evolution of chemotherapy resistance in ovarian cancer from longitudinal copy-number-based measurements (liquidCNA subclonal fractions) and CA125 tumour burden.",
+  "version": "0.1.0",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "MIT",
+  "creators": [
+    {
+      "name": "Mishra, Abhinav",
+      "orcid": "",
+      "affiliation": ""
+    }
+  ],
+  "keywords": [
+    "cancer",
+    "chemotherapy resistance",
+    "ovarian cancer",
+    "copy number alterations",
+    "liquidCNA",
+    "ODE",
+    "PDE",
+    "reaction-diffusion",
+    "computational biology",
+    "bioinformatics"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1158/0008-5472.CAN-25-0351",
+      "relation": "isSupplementTo",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.17632/m93sk9n767.1",
+      "relation": "isDerivedFrom",
+      "scheme": "doi"
+    }
+  ],
+  "references": [
+    "Hockings et al. (2025). Subclonal copy-number alterations drive resistance to platinum-based chemotherapy in ovarian cancer. Cancer Research. DOI: 10.1158/0008-5472.CAN-25-0351"
+  ]
+}

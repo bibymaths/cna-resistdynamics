@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
 from __future__ import annotations
 
 import numpy as np
@@ -16,13 +18,13 @@ def _logit_scalar(x: float) -> float:
 
 @njit(cache=True, fastmath=True, nogil=True)
 def _nll_ratio_ca_jit(
-        ratio_obs: np.ndarray,
-        se_logit_ratio: np.ndarray,
-        logca_obs: np.ndarray,
-        ratio_hat: np.ndarray,
-        logca_hat: np.ndarray,
-        sigma_ca: float,
-        w_ca: float,
+    ratio_obs: np.ndarray,
+    se_logit_ratio: np.ndarray,
+    logca_obs: np.ndarray,
+    ratio_hat: np.ndarray,
+    logca_hat: np.ndarray,
+    sigma_ca: float,
+    w_ca: float,
 ) -> float:
     n = ratio_obs.shape[0]
 
@@ -52,14 +54,14 @@ def _nll_ratio_ca_jit(
 
 
 def nll_ratio_ca(
-        *,
-        ratio_obs: np.ndarray,
-        se_logit_ratio: np.ndarray,
-        logca_obs: np.ndarray,
-        ratio_hat: np.ndarray,
-        logca_hat: np.ndarray,
-        sigma_ca: float,
-        w_ca: float = 1.0,
+    *,
+    ratio_obs: np.ndarray,
+    se_logit_ratio: np.ndarray,
+    logca_obs: np.ndarray,
+    ratio_hat: np.ndarray,
+    logca_hat: np.ndarray,
+    sigma_ca: float,
+    w_ca: float = 1.0,
 ) -> float:
     """
     Negative log-likelihood:
@@ -88,12 +90,12 @@ def nll_ratio_ca(
 
 
 def gof_metrics(
-        r_obs: np.ndarray,
-        r_hat: np.ndarray,
-        logca_obs: np.ndarray,
-        logca_hat: np.ndarray,
-        nll: float,
-        k_params: int,
+    r_obs: np.ndarray,
+    r_hat: np.ndarray,
+    logca_obs: np.ndarray,
+    logca_hat: np.ndarray,
+    nll: float,
+    k_params: int,
 ) -> dict[str, float]:
     r_obs = np.asarray(r_obs, float)
     r_hat = np.asarray(r_hat, float)

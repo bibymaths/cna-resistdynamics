@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
+# Development compose: mounts source code for iterative development.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up
+#
+# The source tree is mounted read-write so edits are reflected without rebuild.
+
+version: "3.9"
+
+services:
+  tumorfits-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: ["conda", "run", "--no-capture-output", "-n", "cna-resist-dynamics"]
+    command: ["bash"]
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/workspace
+      - ./data:/data
+      - ./results:/results
+    working_dir: /workspace
+    environment:
+      - OMP_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+      - PYTHONDONTWRITEBYTECODE=1

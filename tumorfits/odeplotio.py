@@ -1,7 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
 from __future__ import annotations
 
 import os
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -12,7 +13,7 @@ from .odemodel import simulate_states
 from .utils import ensure_dir
 
 
-def pretty_print(title: str, context_names: List[str], theta: np.ndarray, metrics: Dict):
+def pretty_print(title: str, context_names: list[str], theta: np.ndarray, metrics: dict):
     print("\n" + "=" * 80)
     print(title)
     print("=" * 80)
@@ -50,7 +51,11 @@ def plot_gof_scatter_all(df_points: pd.DataFrame, out_prefix: str = "gof"):
             out = sub.loc[sub["flag_out95"]].copy()
             if not out.empty:
                 out["dev"] = np.abs(out["obs"] - out["pred"])
-                out_best = out.sort_values("dev", ascending=False).groupby("patient", as_index=False).head(1)
+                out_best = (
+                    out.sort_values("dev", ascending=False)
+                    .groupby("patient", as_index=False)
+                    .head(1)
+                )
                 for _, r in out_best.iterrows():
                     plt.text(r["obs"], r["pred"], str(r["patient"]), fontsize=8)
 
@@ -60,13 +65,13 @@ def plot_gof_scatter_all(df_points: pd.DataFrame, out_prefix: str = "gof"):
 
 
 def save_patient_states_plots(
-        data: PatientData,
-        theta: np.ndarray,
-        out_dir: str,
-        *,
-        tag: str = "ODE",
-        save_csv: bool = True,
-        dpi: int = 300,
+    data: PatientData,
+    theta: np.ndarray,
+    out_dir: str,
+    *,
+    tag: str = "ODE",
+    save_csv: bool = True,
+    dpi: int = 300,
 ):
     out_dir = ensure_dir(out_dir)
     pid = str(data.patient)
@@ -74,28 +79,32 @@ def save_patient_states_plots(
     S, R, N, r_hat, logca_hat, u_ctx = simulate_states(data, theta)
 
     if save_csv:
-        df = pd.DataFrame({
-            "patient": pid,
-            "time": data.t.astype(float),
-            "context_id": data.context.astype(int),
-            "context_name": [data.context_names[i] for i in data.context],
-            "S": S.astype(float),
-            "R": R.astype(float),
-            "N": N.astype(float),
-            "r_hat": r_hat.astype(float),
-            "ratio_obs": data.ratio.astype(float),
-            "logCA_hat": logca_hat.astype(float),
-            "logCA_obs": data.log_ca125.astype(float),
-        })
+        df = pd.DataFrame(
+            {
+                "patient": pid,
+                "time": data.t.astype(float),
+                "context_id": data.context.astype(int),
+                "context_name": [data.context_names[i] for i in data.context],
+                "S": S.astype(float),
+                "R": R.astype(float),
+                "N": N.astype(float),
+                "r_hat": r_hat.astype(float),
+                "ratio_obs": data.ratio.astype(float),
+                "logCA_hat": logca_hat.astype(float),
+                "logCA_obs": data.log_ca125.astype(float),
+            }
+        )
         df.to_csv(os.path.join(out_dir, f"{pid}_{tag}_states.csv"), index=False)
 
         # canonical u_ctx slice begins at 10
-        dfu = pd.DataFrame({
-            "patient": pid,
-            "context_name": data.context_names,
-            "u_ctx": u_ctx.astype(float),
-            "logit_u_ctx": theta[10:10 + len(data.context_names)].astype(float),
-        })
+        dfu = pd.DataFrame(
+            {
+                "patient": pid,
+                "context_name": data.context_names,
+                "u_ctx": u_ctx.astype(float),
+                "logit_u_ctx": theta[10 : 10 + len(data.context_names)].astype(float),
+            }
+        )
         dfu.to_csv(os.path.join(out_dir, f"{pid}_{tag}_u_ctx.csv"), index=False)
 
     # Plot 1: states

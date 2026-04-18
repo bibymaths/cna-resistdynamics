@@ -1,12 +1,13 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
-from .utils import safe_log, ci95_to_se_logit
+from .utils import ci95_to_se_logit, safe_log
 
 
 @dataclass
@@ -14,7 +15,7 @@ class PatientData:
     patient: str
     t: np.ndarray
     context: np.ndarray
-    context_names: List[str]
+    context_names: list[str]
     ratio: np.ndarray
     se_logit_ratio: np.ndarray
     ca125: np.ndarray
@@ -42,16 +43,16 @@ def _is_true(x) -> bool:
 
 
 def load_patient_data(
-        path: str,
-        patient: str,
-        *,
-        time_unit: str = "months",
-        sample_list_path: Optional[str] = None,
-        use_ca125_updated: bool = False,
-        drop_failed: bool = False,
-        require_panel_sequenced: bool = False,
-        require_detected_cna: bool = False,
-        accept_flags: Tuple[str, ...] = ("yes", "maybe"),
+    path: str,
+    patient: str,
+    *,
+    time_unit: str = "months",
+    sample_list_path: str | None = None,
+    use_ca125_updated: bool = False,
+    drop_failed: bool = False,
+    require_panel_sequenced: bool = False,
+    require_detected_cna: bool = False,
+    accept_flags: tuple[str, ...] = ("yes", "maybe"),
 ) -> PatientData:
     """
     Loads Subclonal_ratio_estimates.extended.txt (tab-separated)
@@ -71,7 +72,9 @@ def load_patient_data(
                 sample_col = cand
                 break
         if sample_col is None:
-            raise ValueError("Could not find sample id column in extended table (expected 'time' or similar).")
+            raise ValueError(
+                "Could not find sample id column in extended table (expected 'time' or similar)."
+            )
 
         df[sample_col] = df[sample_col].astype(str)
         sl = sl.rename(columns={"SampleName": sample_col})
@@ -120,7 +123,7 @@ def load_patient_data(
     r_hi = np.clip(df["ratio_max95"].to_numpy().astype(float), 1e-4, 1 - 1e-4)
     se = ci95_to_se_logit(ratio, r_lo, r_hi)
 
-    maybe = (df["Accept_estimate"].to_numpy() == "maybe")
+    maybe = df["Accept_estimate"].to_numpy() == "maybe"
     se = np.where(maybe, se * 2.0, se)
 
     ca = df["CA125"].to_numpy().astype(float)
@@ -152,13 +155,19 @@ def load_drivers(path: str) -> pd.DataFrame:
     if "Patient" not in df.columns:
         raise ValueError(f"No Patient column. Columns={list(df.columns)}")
 
-    gene_col = "GeneName" if "GeneName" in df.columns else ("GeneID" if "GeneID" in df.columns else df.columns[0])
+    gene_col = (
+        "GeneName"
+        if "GeneName" in df.columns
+        else ("GeneID" if "GeneID" in df.columns else df.columns[0])
+    )
     df = df[["Patient", gene_col]].rename(columns={gene_col: "Driver"}).copy()
     df["Patient"] = df["Patient"].astype(str).str.strip()
     df["Driver"] = df["Driver"].astype(str).str.strip()
 
-    g = (df.groupby("Patient")["Driver"]
-         .apply(lambda s: ",".join(sorted(set([x for x in s if x and x.lower() != "nan"]))))
-         .reset_index())
+    g = (
+        df.groupby("Patient")["Driver"]
+        .apply(lambda s: ",".join(sorted(set([x for x in s if x and x.lower() != "nan"]))))
+        .reset_index()
+    )
     g["n_drivers"] = g["Driver"].apply(lambda x: 0 if not x else len(x.split(",")))
     return g

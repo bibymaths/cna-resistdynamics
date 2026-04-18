@@ -1,13 +1,13 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
 # tumorfits/bayes_pde_pymc.py
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict
 
 import numpy as np
 
 from .odeio import PatientData
-from .metrics import nll_ratio_ca
 from .pdemodel import PDEConfig
 from .pdesolve import solve_pde
 
@@ -61,7 +61,9 @@ def build_pde_pymc_model(data: PatientData, cfg: PDEConfig, bcfg: PDEBayesConfig
         if (aS <= 0) or (aR <= 0) or (dS < 0) or (dR < 0) or (K <= 1e-8):
             return np.array(1e50, dtype=float)
 
-        nll, _, _, _ = solve_pde([aS, aR, dS, dR, K], local_cfg, data, comm=None, return_history=False)
+        nll, _, _, _ = solve_pde(
+            [aS, aR, dS, dR, K], local_cfg, data, comm=None, return_history=False
+        )
         return np.array(float(nll), dtype=float)
 
     with pm.Model() as model:
@@ -72,7 +74,7 @@ def build_pde_pymc_model(data: PatientData, cfg: PDEConfig, bcfg: PDEBayesConfig
         aR = pm.LogNormal("aR", mu=np.log(0.3), sigma=1.0)
         dS = pm.LogNormal("dS", mu=np.log(0.4), sigma=1.0)
         dR = pm.LogNormal("dR", mu=np.log(0.1), sigma=1.0)
-        K  = pm.LogNormal("K",  mu=np.log(1e6), sigma=3.0)
+        K = pm.LogNormal("K", mu=np.log(1e6), sigma=3.0)
 
         if bcfg.infer_diffusion:
             DS = pm.LogNormal("DS", mu=np.log(cfg.DS), sigma=1.0)

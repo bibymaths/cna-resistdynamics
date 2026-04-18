@@ -1,0 +1,31 @@
+TERMS OF USE — CNA-ResistDynamics
+==================================
+
+Copyright 2025 Abhinav Mishra
+
+This software is released under the MIT License (see LICENSE).
+
+By using, copying, modifying, or distributing this software you agree to the
+following:
+
+1. RESEARCH USE
+   This software was developed for academic and non-commercial research
+   purposes.  Users are responsible for validating results before any
+   clinical or commercial application.
+
+2. DATA
+   The patient data bundled in the data/ directory of this repository is
+   derived from the study by Hockings et al. (2025) and is subject to the
+   terms of the original data release (Mendeley Dataset DOI 10.17632/m93sk9n767.1).
+   Any redistribution of that data must comply with those terms.
+
+3. ATTRIBUTION
+   Publications using this software should cite:
+     Hockings et al. (2025). Cancer Research. DOI: 10.1158/0008-5472.CAN-25-0351
+
+4. NO WARRANTY
+   This software is provided "as is" without warranty of any kind.  See the
+   MIT License for the full disclaimer.
+
+5. CONTACT
+   For questions: mishraabhinav@gmail.com

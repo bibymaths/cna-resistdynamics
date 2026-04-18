@@ -1,14 +1,15 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
-from .odeio import PatientData
 from .metrics import nll_ratio_ca
+from .odeio import PatientData
 from .odemodel import simulate_ode
 from .pdemodel import PDEConfig
 from .pdesolve import solve_pde
@@ -19,13 +20,14 @@ class SensitivityConfig:
     """
     SALib sensitivity config.
     """
-    method: str = "sobol"     # currently only sobol
-    n_base: int = 1024        # base sample size (Saltelli). 1024-8192 typical.
+
+    method: str = "sobol"  # currently only sobol
+    n_base: int = 1024  # base sample size (Saltelli). 1024-8192 typical.
     calc_second_order: bool = False
     seed: int = 0
 
 
-def _sobol_problem(names: List[str], bounds: List[Tuple[float, float]]) -> Dict:
+def _sobol_problem(names: list[str], bounds: list[tuple[float, float]]) -> dict:
     return {"num_vars": len(names), "names": names, "bounds": bounds}
 
 
@@ -64,19 +66,21 @@ def _pde_objective_from_params(params: np.ndarray, cfg: PDEConfig, data: Patient
 def run_sobol_sensitivity_ode(
     *,
     data: PatientData,
-    names: List[str],
-    bounds: List[Tuple[float, float]],
-    cfg: SensitivityConfig = SensitivityConfig(),
+    names: list[str],
+    bounds: list[tuple[float, float]],
+    cfg: SensitivityConfig | None = None,
     w_ca: float = 0.5,
     out_prefix: str = "salib_ode",
-) -> Dict[str, pd.DataFrame]:
+) -> dict[str, pd.DataFrame]:
     """
     Sobol sensitivity for ODE.
     'names' and 'bounds' must correspond to the ODE theta vector you want to vary.
     """
+    if cfg is None:
+        cfg = SensitivityConfig()
     # Local imports so users without SALib don't break ODE/PDE usage.
-    from SALib.sample import saltelli
     from SALib.analyze import sobol
+    from SALib.sample import saltelli
 
     rng = np.random.default_rng(cfg.seed)
     problem = _sobol_problem(names, bounds)
@@ -113,17 +117,19 @@ def run_sobol_sensitivity_pde(
     *,
     data: PatientData,
     pde_cfg: PDEConfig,
-    names: List[str],
-    bounds: List[Tuple[float, float]],
-    cfg: SensitivityConfig = SensitivityConfig(),
+    names: list[str],
+    bounds: list[tuple[float, float]],
+    cfg: SensitivityConfig | None = None,
     out_prefix: str = "salib_pde",
-) -> Dict[str, pd.DataFrame]:
+) -> dict[str, pd.DataFrame]:
     """
     Sobol sensitivity for PDE parameters in physical space.
     Typical names: ["aS","aR","dS","dR","K"].
     """
-    from SALib.sample import saltelli
+    if cfg is None:
+        cfg = SensitivityConfig()
     from SALib.analyze import sobol
+    from SALib.sample import saltelli
 
     rng = np.random.default_rng(cfg.seed)
     problem = _sobol_problem(names, bounds)
