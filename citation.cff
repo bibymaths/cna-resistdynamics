@@ -13,7 +13,8 @@ repository-code: "https://github.com/bibymaths/cna-resistdynamics"
 authors:
   - family-names: Mishra
     given-names: Abhinav
-    email: mishraabhinav@gmail.com
+    affiliation: "Independent Researcher"
+    orcid: "https://orcid.org/0009-0005-3179-7408"
 keywords:
   - cancer
   - chemotherapy resistance
