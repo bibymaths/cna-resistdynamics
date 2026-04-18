@@ -1,6 +1,3 @@
-<!-- SPDX-FileCopyrightText: 2025 Abhinav Mishra -->
-<!-- SPDX-License-Identifier: MIT -->
-
 # Contributing
 
 Thank you for your interest in contributing to CNA-ResistDynamics.

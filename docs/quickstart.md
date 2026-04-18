@@ -1,6 +1,3 @@
-<!-- SPDX-FileCopyrightText: 2025 Abhinav Mishra -->
-<!-- SPDX-License-Identifier: MIT -->
-
 # Quick Start
 
 This guide walks through the complete pipeline from raw `.RData` inputs to PDE

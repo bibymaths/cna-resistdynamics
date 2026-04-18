@@ -1,6 +1,3 @@
-<!-- SPDX-FileCopyrightText: 2025 Abhinav Mishra -->
-<!-- SPDX-License-Identifier: MIT -->
-
 # Mathematical Model
 
 ## Biological motivation

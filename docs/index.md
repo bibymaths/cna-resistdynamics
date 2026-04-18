@@ -1,29 +1,9 @@
----
-hide:
-  - navigation
-  - toc
----
-
-<div align="center">
-
 <img src="assets/logo.svg" alt="CNA-ResistDynamics" width="140" />
 
-# CNA-ResistDynamics
-
-**Dynamical modelling of chemotherapy resistance from liquidCNA measurements**
-
-[![Tests](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/tests.yml/badge.svg)](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/tests.yml)
-[![Docs](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/docs.yml/badge.svg)](https://bibymaths.github.io/cna-resistdynamics/)
-[![Python 3.11](https://img.shields.io/badge/python-3.11-blue)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
-📚 **[Issues](https://github.com/bibymaths/cna-resistdynamics/issues)**
-
-</div>
-
----
-
-## Overview
+![Tests](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/tests.yml/badge.svg)]
+![Docs](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/docs.yml/badge.svg)]
+![Python 3.11](https://img.shields.io/badge/python-3.11-blue)]
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
 **CNA-ResistDynamics** is a research software package that infers the temporal
 evolution of chemotherapy resistance in ovarian cancer from longitudinal

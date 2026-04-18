@@ -1,6 +1,3 @@
-<!-- SPDX-FileCopyrightText: 2025 Abhinav Mishra -->
-<!-- SPDX-License-Identifier: MIT -->
-
 # API Reference
 
 This page documents the public Python API of the `tumorfits` package.
