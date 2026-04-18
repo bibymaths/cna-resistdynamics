@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
+# NOTE: This script has been migrated to tumorfits.dataio. Use `tumorfits extract-data` instead.
 import pyreadr
 import os
 import pandas as pd

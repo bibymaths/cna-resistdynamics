@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
 # tumorfits/bayes_pde_pymc.py
 from __future__ import annotations
 

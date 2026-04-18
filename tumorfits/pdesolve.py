@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
 # tumorfits/pdesolve.py
 from __future__ import annotations
 

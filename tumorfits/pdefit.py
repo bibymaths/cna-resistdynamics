@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2025 Abhinav Mishra
+# SPDX-License-Identifier: MIT
 from __future__ import annotations
 
 import numpy as np
