@@ -4,31 +4,21 @@ hide:
   - toc
 ---
 
-<!-- SPDX-FileCopyrightText: 2025 Abhinav Mishra -->
-<!-- SPDX-License-Identifier: MIT -->
-
 <div align="center">
-  <img src="https://raw.githubusercontent.com/bibymaths/cna-resistdynamics/main/docs/assets/logo.svg"
-       alt="CNA-ResistDynamics" width="180" style="margin-bottom: 1rem;" />
 
-  <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 0.25rem;">
-    CNA-ResistDynamics
-  </h1>
+<img src="assets/logo.svg" alt="CNA-ResistDynamics" width="140" />
 
-  <p style="font-size: 1.15rem; color: var(--md-default-fg-color--light); margin-bottom: 1.5rem;">
-    Dynamical modelling of chemotherapy resistance from liquidCNA measurements
-  </p>
+# CNA-ResistDynamics
 
-  <p>
-    <a href="https://github.com/bibymaths/cna-resistdynamics/actions/workflows/tests.yml">
-      <img alt="tests" src="https://github.com/bibymaths/cna-resistdynamics/actions/workflows/tests.yml/badge.svg" />
-    </a>
-    <a href="https://github.com/bibymaths/cna-resistdynamics/actions/workflows/docs.yml">
-      <img alt="docs" src="https://github.com/bibymaths/cna-resistdynamics/actions/workflows/docs.yml/badge.svg" />
-    </a>
-    <img alt="python" src="https://img.shields.io/badge/python-3.11-blue" />
-    <img alt="license" src="https://img.shields.io/badge/license-MIT-green" />
-  </p>
+**Dynamical modelling of chemotherapy resistance from liquidCNA measurements**
+
+[![Tests](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/tests.yml/badge.svg)](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/tests.yml)
+[![Docs](https://github.com/bibymaths/cna-resistdynamics/actions/workflows/docs.yml/badge.svg)](https://bibymaths.github.io/cna-resistdynamics/)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+📚 **[Issues](https://github.com/bibymaths/cna-resistdynamics/issues)**
+
 </div>
 
 ---
