@@ -191,7 +191,7 @@ rule heatmaps:
                 f"--ca0 {params.h['ca0']} "
                 f"--sigma_ca {params.h['sigma_ca']} "
                 f"--w_ca {params.h['w_ca']} "
-                f"2>&1 | tee -a {log}"
+                f"2>&1 | tee -a {log[0]}"
             )
 
 

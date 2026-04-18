@@ -309,7 +309,7 @@ def plot_growth_streamlines(
     import pyvista as pv
 
     V = S.function_space
-    N_fn = V.__class__(V)
+    N_fn = Function(V)
     N_fn.x.array[:] = S.x.array[:] + R.x.array[:]
 
     cells, types, x = dolfinx.plot.vtk_mesh(V)

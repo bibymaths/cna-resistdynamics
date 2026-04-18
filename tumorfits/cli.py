@@ -25,7 +25,7 @@ from .pderunner import run_pde_cli
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="tumorfits",
-        description="ODE → PDE tumour resistance fitting pipeline",
+        description="ODE → PDE tumor resistance fitting pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"

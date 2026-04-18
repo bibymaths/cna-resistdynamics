@@ -62,12 +62,12 @@ def export_all_patient_data(
 
     for file_path in sorted(root_dir.rglob("*.RData")):
         match = PATIENT_ID_PATTERN.search(file_path.name)
-        patient_id = match.group(0) if match else "Unknown_Patient"
+        pid = match.group(0) if match else "Unknown_Patient"
 
-        patient_dir = out_dir / patient_id
+        patient_dir = out_dir / pid
         patient_dir.mkdir(parents=True, exist_ok=True)
 
-        _log.info("Processing %s  (patient=%s)", file_path.name, patient_id)
+        _log.info("Processing %s  (id=%s)", file_path.name, pid)
 
         try:
             result = pyreadr.read_r(str(file_path))
@@ -80,9 +80,9 @@ def export_all_patient_data(
                 _log.debug("Skipped '%s': not a DataFrame", obj_name)
                 continue
 
-            csv_path = patient_dir / f"{obj_name}.csv"
-            obj.to_csv(csv_path, index=True)
-            _log.info("  -> %s", csv_path)
-            written.setdefault(patient_id, []).append(str(csv_path))
+            out_csv = patient_dir / f"{obj_name}.csv"
+            obj.to_csv(out_csv, index=True)
+            _log.debug("  -> %s", out_csv)
+            written.setdefault(pid, []).append(str(out_csv))
 
     return written
