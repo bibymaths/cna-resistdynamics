@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # Multi-stage build: base image with system dependencies + app layer
-FROM condaforge/mambaforge:23.11.0-0 AS base
+FROM condaforge/miniforge3:latest AS base
 
 LABEL maintainer="Abhinav Mishra <mishraabhinav@gmail.com>"
 LABEL org.opencontainers.image.title="CNA-ResistDynamics"
@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # --- Create conda environment ---
 WORKDIR /opt/tumorfits
 COPY environment.yml .
-RUN mamba env create -f environment.yml && \
+RUN mamba env create -f environment.yml --solver=classic && \
     mamba clean --all -y
 
 # Activate the environment for all subsequent RUN/CMD/ENTRYPOINT
